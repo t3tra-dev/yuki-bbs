@@ -1,3 +1,5 @@
+dev版だお
+
 BBSのみをひきぬいたやつ
 <!--
 <a href="https://render.com/deploy?repo=https://github.com/vex12853-sub/yuki-bbs">

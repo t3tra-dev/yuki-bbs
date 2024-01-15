@@ -207,11 +207,11 @@ function sendMessageByUser() {
 
 // メッセージ読み込み
 var xhr;
-function loadMessage() {
+function loadMessage(channel_="", verify_=false) {
   if (xhr && xhr.readyState !== 4) { xhr.abort(); }
   
-  var channel = $('#channel').val();
-  var filter = $('#verify').prop('checked');
+  var channel = channel_ ? channel_ : $('#channel').val();
+  var filter = verify_ ? verify_ : $('#verify').prop('checked');
   
   xhr = $.ajax({
     type: 'GET',
@@ -289,7 +289,11 @@ $(document).ready(function() {
   $('#channel').change(function() {
     var newSelectedChannel = $(this).val();
     localStorage.setItem('channel', newSelectedChannel);
-    loadMessage();
+    if (channel == "multi") {
+      loadMultiMessage();
+    } else {
+      loadMessage();
+    }
   });
 
   var isVerified = localStorage.getItem('verify') === 'true';

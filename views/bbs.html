@@ -246,11 +246,11 @@ function loadMessage(channel_="", verify_=false) {
           var anchoredText = markedText.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
           var urlRegex = /(https?:\/\/[^\s]+)/g;
 　         if (urlRegex.test(text)) {
-            replacedText = anchoredText.replace(urlRegex, function(url) {
+            anchoredText = anchoredText.replace(urlRegex, function(url) {
               return '<a href="' + url + '">' + url + '</a>';
             });
           }
-          $(this).replaceWith(replacedText);
+          $(this).replaceWith(anchoredText);
         }
       });
       hljs.highlightAll();

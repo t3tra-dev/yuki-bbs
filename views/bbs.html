@@ -242,16 +242,18 @@ function loadMessage(channel_="", verify_=false) {
       $("#result").find("*").contents().each(function() {
         if (this.nodeType === 3) {
           var text = $(this).text();
-          var replacedText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
+          var markedText = marked.parse(text);
+          var anchoredText = markedText.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
           var urlRegex = /(https?:\/\/[^\s]+)/g;
 　         if (urlRegex.test(text)) {
-            replacedText = replacedText.replace(urlRegex, function(url) {
+            replacedText = anchoredText.replace(urlRegex, function(url) {
               return '<a href="' + url + '">' + url + '</a>';
             });
           }
           $(this).replaceWith(replacedText);
         }
       });
+      hljs.highlightAll();
       $('.anchor').click(function() {
         var currentMsg = $('#message').val();
         $('#message').val(currentMsg + '≫' + $(this).text() + ' ');

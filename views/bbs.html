@@ -142,6 +142,7 @@ input {
   border-radius: 0;
 }
 </style>
+
 <script>
 // オートリンク
 function autoLink(str) {
@@ -257,9 +258,9 @@ function getMessage(channel_ = "", verify_ = false) {
         }
       });
       // hljs.highlightAll();
+      return newData;
     }
   });
-  return anchoredText;
 }
 
 // メッセージ読み込み

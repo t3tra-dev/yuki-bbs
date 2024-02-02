@@ -211,14 +211,18 @@ function sendMessageByUser() {
   $('#message').val("");
 }
 
-// メッセージ読み込み
+// メッセージ取得
 var xhr;
-function loadMessage(channel_="", verify_=false) {
-  if (xhr && xhr.readyState !== 4) { xhr.abort(); }
-  
-  var channel = channel_ ? channel_ : $('#channel').val();
-  var filter = verify_ ? verify_ : $('#verify').prop('checked');
-  
+function getMessage(channel_ = "", verify_ = false) {
+  if (xhr && xhr.readyState !== 4) {
+    xhr.abort();
+  }
+
+  var channel = channel_;
+  var filter = verify_;
+
+  var anchoredText = "";
+
   xhr = $.ajax({
     type: 'GET',
     url: '/bbs/api',
@@ -231,9 +235,8 @@ function loadMessage(channel_="", verify_=false) {
       'verify': filter,
       't': 0
     },
-    success: function(data) {
-      $('#result').html(data);
-      $('table tr').each(function() {
+    success: function (data) {
+      $('table tr').each(function () {
         var firstTd = $(this).find('td:first');
         var secondTd = $(this).find('td:eq(1)');
         var number = firstTd.text();
@@ -241,26 +244,26 @@ function loadMessage(channel_="", verify_=false) {
         firstTd.html(`<button class="anchor" id="${number}">${number}</button>`);
         secondTd.html(`<button class="userIDAnchor">${username}</button>`);
       });
-      $("#result").find("*").contents().each(function() {
+      $("#result").find("*").contents().each(function () {
         if (this.nodeType === 3) {
           var text = $(this).text();
           // var markedText = marked.parse(text);
-          var anchoredText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
+          anchoredText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
           var urlRegex = /(https?:\/\/[^\s]+)/g;
-　         if (urlRegex.test(text)) {
-            anchoredText = anchoredText.replace(urlRegex, function(url) {
+          if (urlRegex.test(text)) {
+            anchoredText = anchoredText.replace(urlRegex, function (url) {
               return '<a href="' + url + '">' + url + '</a>';
             });
           }
-          $(this).replaceWith(anchoredText);
+          // $(this).replaceWith(anchoredText);
         }
       });
       // hljs.highlightAll();
-      $('.anchor').click(function() {
+      $('.anchor').click(function () {
         var currentMsg = $('#message').val();
         $('#message').val(currentMsg + '≫' + $(this).text() + ' ');
       });
-      $('.userIDAnchor').click(function() {
+      $('.userIDAnchor').click(function () {
         var currentMsg = $('#message').val();
         var cmdRegex = /^\/(dis)?speaker|manager|moderator$/g;
         if (currentMsg.match(cmdRegex)) { $('#message').val(currentMsg + ' ' + $(this).text()); } else { $('#message').val(currentMsg + $(this).text()); }
@@ -268,6 +271,15 @@ function loadMessage(channel_="", verify_=false) {
       if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
     }
   });
+  return anchoredText;
+}
+
+// メッセージ読み込み
+function loadMessage(channel_="", verify_=false) {
+  var channel = channel_ ? channel_ : $('#channel').val();
+  var filter = verify_ ? verify_ : $('#verify').prop('checked');
+  var data = getMessage(channel, filter);
+  $('#result').html(data);
 }
 
 // ネットワークコネクション検知

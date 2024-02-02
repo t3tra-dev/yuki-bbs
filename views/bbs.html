@@ -280,6 +280,7 @@ function loadMessage(channel_="", verify_=false) {
   var filter = verify_ ? verify_ : $('#verify').prop('checked');
   var data = getMessage(channel, filter);
   $('#result').html(data);
+  return data;
 }
 
 // ネットワークコネクション検知

@@ -252,11 +252,6 @@ function getMessage(channel_ = "", verify_ = false) {
         if (this.nodeType === 3) {
           var text = $(this).text();
           anchoredText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
-          var urlRegex = /(https?:\/\/[^\s]+)/g;
-          if (urlRegex.test(text)) {
-            anchoredText = anchoredText.replace(urlRegex, function (url) {
-              return '<a href="' + url + '">' + url + '</a>';
-            });
           }
           $(this).replaceWith(anchoredText);
         }

@@ -249,25 +249,10 @@ function getMessage(channel_ = "", verify_ = false) {
           var text = $(this).text();
           // var markedText = marked.parse(text);
           anchoredText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
-          var urlRegex = /(https?:\/\/[^\s]+)/g;
-          if (urlRegex.test(text)) {
-            anchoredText = anchoredText.replace(urlRegex, function (url) {
-              return '<a href="' + url + '">' + url + '</a>';
-            });
-          }
           // $(this).replaceWith(anchoredText);
         }
       });
       // hljs.highlightAll();
-      $('.anchor').click(function () {
-        var currentMsg = $('#message').val();
-        $('#message').val(currentMsg + '≫' + $(this).text() + ' ');
-      });
-      $('.userIDAnchor').click(function () {
-        var currentMsg = $('#message').val();
-        var cmdRegex = /^\/(dis)?speaker|manager|moderator$/g;
-        if (currentMsg.match(cmdRegex)) { $('#message').val(currentMsg + ' ' + $(this).text()); } else { $('#message').val(currentMsg + $(this).text()); }
-      });
       if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
     }
   });
@@ -306,7 +291,18 @@ $(document).ready(function() {
   if (selectedChannel) {
     $('#channel').val(selectedChannel);
   }
+
+  $('.anchor').click(function () {
+    var currentMsg = $('#message').val();
+    $('#message').val(currentMsg + '≫' + $(this).text() + ' ');
+  });
   
+  $('.userIDAnchor').click(function () {
+    var currentMsg = $('#message').val();
+    var cmdRegex = /^\/(dis)?speaker|manager|moderator$/g;
+    if (currentMsg.match(cmdRegex)) { $('#message').val(currentMsg + ' ' + $(this).text()); } else { $('#message').val(currentMsg + $(this).text()); }
+  });
+
   $('#channel').change(function() {
     var newSelectedChannel = $(this).val();
     localStorage.setItem('channel', newSelectedChannel);

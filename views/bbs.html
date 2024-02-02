@@ -6,9 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!--
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/agate.min.css">
+  -->
 </head>
 <body>
   <span id="status">network status</span>
@@ -242,8 +244,8 @@ function loadMessage(channel_="", verify_=false) {
       $("#result").find("*").contents().each(function() {
         if (this.nodeType === 3) {
           var text = $(this).text();
-          var markedText = marked.parse(text);
-          var anchoredText = markedText.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
+          // var markedText = marked.parse(text);
+          var anchoredText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
           var urlRegex = /(https?:\/\/[^\s]+)/g;
 　         if (urlRegex.test(text)) {
             anchoredText = anchoredText.replace(urlRegex, function(url) {
@@ -253,7 +255,7 @@ function loadMessage(channel_="", verify_=false) {
           $(this).replaceWith(anchoredText);
         }
       });
-      hljs.highlightAll();
+      // hljs.highlightAll();
       $('.anchor').click(function() {
         var currentMsg = $('#message').val();
         $('#message').val(currentMsg + '≫' + $(this).text() + ' ');

@@ -236,7 +236,10 @@ function getMessage(channel_ = "", verify_ = false) {
       't': 0
     },
     success: function (data) {
-      $('table tr').each(function () {
+      var anchoredText = "";
+      var newData = $(data);
+
+      newData.find('table tr').each(function () {
         var firstTd = $(this).find('td:first');
         var secondTd = $(this).find('td:eq(1)');
         var number = firstTd.text();
@@ -244,16 +247,21 @@ function getMessage(channel_ = "", verify_ = false) {
         firstTd.html(`<button class="anchor" id="${number}">${number}</button>`);
         secondTd.html(`<button class="userIDAnchor">${username}</button>`);
       });
-      $("#result").find("*").contents().each(function () {
+
+      newData.find("*").contents().each(function () {
         if (this.nodeType === 3) {
           var text = $(this).text();
-          // var markedText = marked.parse(text);
           anchoredText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
-          // $(this).replaceWith(anchoredText);
+          var urlRegex = /(https?:\/\/[^\s]+)/g;
+          if (urlRegex.test(text)) {
+            anchoredText = anchoredText.replace(urlRegex, function (url) {
+              return '<a href="' + url + '">' + url + '</a>';
+            });
+          }
+          $(this).replaceWith(anchoredText);
         }
       });
       // hljs.highlightAll();
-      if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
     }
   });
   return anchoredText;
@@ -265,6 +273,7 @@ function loadMessage(channel_="", verify_=false) {
   var filter = verify_ ? verify_ : $('#verify').prop('checked');
   var data = getMessage(channel, filter);
   $('#result').html(data);
+  if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
   return data;
 }
 

@@ -12,6 +12,7 @@
   <select name="channel" id="channel">
     <option value="main">雑談</option>
     <option value="battle">バトスタ</option>
+    <option value="dual">DUAL</option>
   </select>
   <label for="verify">スピ限</label>
   <input type="checkbox" id="verify" name="verify">
@@ -48,15 +49,20 @@
       <output id="font-size-val"></output>
     </div>
   </div>
-  <div id="result">loading...</div>
+  <div id="container">
+    <div id="loading">loading...</div>
+  </div>
 <style>
+* {
+  margin: 0;
+  padding: 0;
+}
+
 html {
   scroll-behavior: smooth;
 }
   
 body {
-  margin: 0;
-  padding: 0;
   width: 100vw;
   min-width: 100vw;
   max-width: 100vw;
@@ -64,7 +70,6 @@ body {
 
 select {
   border-radius: 0;
-  padding: 0;
 }
   
 textarea {
@@ -94,8 +99,6 @@ a {
 }
 
 button {
-  padding: 0;
-  margin: 0;
   border: 0;
   border-radius: 0;
   background-color: rgba(225, 225, 225, 0.1);
@@ -133,6 +136,29 @@ button {
 input {
   height: 1em;
   border-radius: 0;
+}
+
+#container {
+  display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+.message {
+  width: 100%;
+}
+
+.message-author {
+  width: 100%;
+  padding: 6px;
+}
+.message-content {
+  width: 100%;
+  padding: 12px;
+}
+
+.tab {
+  width: 50%;
 }
 </style>
 <script>
@@ -204,61 +230,67 @@ function sendMessageByUser() {
   $('#message').val("");
 }
 
-// メッセージ読み込み
-var xhr;
-function loadMessage() {
-  if (xhr && xhr.readyState !== 4) { xhr.abort(); }
-  
-  var channel = $('#channel').val();
-  var filter = $('#verify').prop('checked');
-  
-  xhr = $.ajax({
-    type: 'GET',
-    url: '/bbs/api',
-    headers: { 'Accept': null },
-    xhrFields: {
-      withCredentials: true
-    },
-    data: {
-      'channel': channel,
-      'verify': filter,
-      't': 0
-    },
-    success: function(data) {
-      $('#result').html(data);
-      $('table tr').each(function() {
-        var firstTd = $(this).find('td:first');
-        var secondTd = $(this).find('td:eq(1)');
-        var number = firstTd.text();
-        var username = secondTd.html();
-        firstTd.html(`<button class="anchor" id="${number}">${number}</button>`);
-        secondTd.html(`<button class="userIDAnchor">${username}</button>`);
-      });
-      $("#result").find("*").contents().each(function() {
-        if (this.nodeType === 3) {
-          var text = $(this).text();
-          var replacedText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
-          var urlRegex = /(https?:\/\/[^\s]+)/g;
-　         if (urlRegex.test(text)) {
-            replacedText = replacedText.replace(urlRegex, function(url) {
-              return '<a href="' + url + '">' + url + '</a>';
-            });
-          }
-          $(this).replaceWith(replacedText);
+// メッセージ取得
+function getMessage(channel, filter) {
+  fetch(`/api?channel=${channel}&verify=${filter}&t=0`)
+    .then(response => response.text())
+    .then(xml => {
+      const headerRegex = /<h3>(.*?)<\/h3>/;
+      const rowRegex = /<tr>.*?<td>(.*?)<\/td>.*?<td><font color="(.*?)">(.*?)<\/font><font color="(.*?)">@(\w+)<\/font><font color="magenta">(.*?)<\/font><\/td>.*?<td>(.*?)<\/td>.*?<\/tr>/gs;
+      const headerMatch = headerRegex.exec(xml);
+      const header = headerMatch ? headerMatch[1] : null;
+      const items = [];
+      let match;
+      while ((match = rowRegex.exec(xml)) !== null) {
+        const item = {
+          number: match[1],
+          name: match[3],
+          color: match[2],
+          id: match[5],
+          message: match[7]
+        };
+        if (match[6]) {
+            item.description = match[6];
+        } else {
+          item.description = undefined;
         }
-      });
-      $('.anchor').click(function() {
-        var currentMsg = $('#message').val();
-        $('#message').val(currentMsg + '≫' + $(this).text() + ' ');
-      });
-      $('.userIDAnchor').click(function() {
-        var currentMsg = $('#message').val();
-        var cmdRegex = /^\/(dis)?speaker|manager|moderator$/g;
-        if (currentMsg.match(cmdRegex)) { $('#message').val(currentMsg + ' ' + $(this).text()); } else { $('#message').val(currentMsg + $(this).text()); }
-      });
-      if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
-    }
+        items.push(item);
+      }
+      return {
+        header: header,
+        items: items
+      };
+    })
+  .catch(error => console.error('mmg.get.err:', error));
+  }
+}
+
+// メッセージレンダリング
+function createMessages(channel, filter) {
+  var messages = getMessage(channel, filter);
+  var html = "";
+  messages.forEach(function(message) {
+    var desc = message.description === undefined ? "" | message.description
+    html += `<div class="message">
+      <div class="message-author"><span style="font-weight: bold; margin-right: 1em;">${message.number}</span> <span style="color: ${message.color};">${message.name}</span><span style="color: ${message.defaultColor};">@${message.id}</span> <span style="color: magenta;">${desc}</span></div>
+      <div class="message-content">${message.message}</div>
+    </div>`;
   });
+  return html;
+}
+
+// メッセージ読み込み
+function loadMessage() {
+  var container = document.getElementById("container");
+  if (document.getElementById("channel").value == "main" || document.getElementById("channel").value == "battle") {
+    var msgs = createMessages(document.getElementById("channel").value, document.getElementById("verify").checked);
+    container.innerHTML(msg);
+  } else if (document.getElementById("channel").value == "dual") {
+    var mainMsgs = createMessages("main", document.getElementById("verify").checked);
+    var battleMsgs = createMessages("battle", document.getElementById("verify").checked);
+    var html = `<div class="tab">${mainMsgs}</div><div class="tab">${battleMsgs}</div>`;
+    container.innerHTML(html);
+  }
 }
 
 // ネットワークコネクション検知

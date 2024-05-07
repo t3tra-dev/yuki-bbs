@@ -5,20 +5,13 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!--
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/agate.min.css">
-  -->
-</head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script></head>
 <body>
   <span id="status">network status</span>
   <button id="openModal">設定</button>
   <select name="channel" id="channel">
     <option value="main">雑談</option>
     <option value="battle">バトスタ</option>
-    <option value="multi">multi-view</option>
   </select>
   <label for="verify">スピ限</label>
   <input type="checkbox" id="verify" name="verify">
@@ -142,7 +135,6 @@ input {
   border-radius: 0;
 }
 </style>
-
 <script>
 // オートリンク
 function autoLink(str) {
@@ -212,18 +204,14 @@ function sendMessageByUser() {
   $('#message').val("");
 }
 
-// メッセージ取得
+// メッセージ読み込み
 var xhr;
-function getMessage(channel_ = "", verify_ = false) {
-  if (xhr && xhr.readyState !== 4) {
-    xhr.abort();
-  }
-
-  var channel = channel_;
-  var filter = verify_;
-
-  var anchoredText = "";
-
+function loadMessage() {
+  if (xhr && xhr.readyState !== 4) { xhr.abort(); }
+  
+  var channel = $('#channel').val();
+  var filter = $('#verify').prop('checked');
+  
   xhr = $.ajax({
     type: 'GET',
     url: '/bbs/api',
@@ -236,11 +224,9 @@ function getMessage(channel_ = "", verify_ = false) {
       'verify': filter,
       't': 0
     },
-    success: function (data) {
-      var anchoredText = "";
-      var newData = $(data);
-
-      newData.find('table tr').each(function () {
+    success: function(data) {
+      $('#result').html(data);
+      $('table tr').each(function() {
         var firstTd = $(this).find('td:first');
         var secondTd = $(this).find('td:eq(1)');
         var number = firstTd.text();
@@ -248,29 +234,31 @@ function getMessage(channel_ = "", verify_ = false) {
         firstTd.html(`<button class="anchor" id="${number}">${number}</button>`);
         secondTd.html(`<button class="userIDAnchor">${username}</button>`);
       });
-
-      newData.find("*").contents().each(function () {
+      $("#result").find("*").contents().each(function() {
         if (this.nodeType === 3) {
           var text = $(this).text();
-          anchoredText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
+          var replacedText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
+          var urlRegex = /(https?:\/\/[^\s]+)/g;
+　         if (urlRegex.test(text)) {
+            replacedText = replacedText.replace(urlRegex, function(url) {
+              return '<a href="' + url + '">' + url + '</a>';
+            });
           }
-          $(this).replaceWith(anchoredText);
+          $(this).replaceWith(replacedText);
         }
       });
-      // hljs.highlightAll();
-      return newData;
+      $('.anchor').click(function() {
+        var currentMsg = $('#message').val();
+        $('#message').val(currentMsg + '≫' + $(this).text() + ' ');
+      });
+      $('.userIDAnchor').click(function() {
+        var currentMsg = $('#message').val();
+        var cmdRegex = /^\/(dis)?speaker|manager|moderator$/g;
+        if (currentMsg.match(cmdRegex)) { $('#message').val(currentMsg + ' ' + $(this).text()); } else { $('#message').val(currentMsg + $(this).text()); }
+      });
+      if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
     }
   });
-}
-
-// メッセージ読み込み
-function loadMessage(channel_="", verify_=false) {
-  var channel = channel_ ? channel_ : $('#channel').val();
-  var filter = verify_ ? verify_ : $('#verify').prop('checked');
-  var data = getMessage(channel, filter);
-  $('#result').html(data);
-  if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
-  return data;
 }
 
 // ネットワークコネクション検知
@@ -296,26 +284,11 @@ $(document).ready(function() {
   if (selectedChannel) {
     $('#channel').val(selectedChannel);
   }
-
-  $('.anchor').click(function () {
-    var currentMsg = $('#message').val();
-    $('#message').val(currentMsg + '≫' + $(this).text() + ' ');
-  });
   
-  $('.userIDAnchor').click(function () {
-    var currentMsg = $('#message').val();
-    var cmdRegex = /^\/(dis)?speaker|manager|moderator$/g;
-    if (currentMsg.match(cmdRegex)) { $('#message').val(currentMsg + ' ' + $(this).text()); } else { $('#message').val(currentMsg + $(this).text()); }
-  });
-
   $('#channel').change(function() {
     var newSelectedChannel = $(this).val();
     localStorage.setItem('channel', newSelectedChannel);
-    if (channel == "multi") {
-      loadMultiMessage();
-    } else {
-      loadMessage();
-    }
+    loadMessage();
   });
 
   var isVerified = localStorage.getItem('verify') === 'true';

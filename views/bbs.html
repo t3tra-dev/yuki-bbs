@@ -270,10 +270,7 @@ function createMessages(channel, filter) {
   var html = "";
   messages.forEach(function(message) {
     var desc = message.description === undefined ? "" | message.description
-    html += `<div class="message">
-      <div class="message-author"><span style="font-weight: bold; margin-right: 1em;">${message.number}</span> <span style="color: ${message.color};">${message.name}</span><span style="color: ${message.defaultColor};">@${message.id}</span> <span style="color: magenta;">${desc}</span></div>
-      <div class="message-content">${message.message}</div>
-    </div>`;
+    html += `<div class="message"><div class="message-author"><span style="font-weight: bold; margin-right: 1em;">${message.number}</span> <span style="color: ${message.color};">${message.name}</span><span style="color: ${message.defaultColor};">@${message.id}</span> <span style="color: magenta;">${desc}</span></div><div class="message-content">${message.message}</div></div>`;
   });
   return html;
 }

@@ -305,20 +305,28 @@
 
         data.messages.reverse().forEach((message) => {
           const existingMessage = messageStore.get(message.number);
-      
+
           if (!existingMessage) {
             const messageElement = createMessageElement(message);
-            if (message.message === "削除されました" && message.name === "削除されました") {
+            if (
+              message.message === "削除されました" &&
+              message.name === "削除されました"
+            ) {
               messageElement.classList.add("deleted-message");
             }
             messagesContainer.appendChild(messageElement);
             messageStore.set(message.number, message);
           } else if (
-            message.message === "削除されました" && 
-            message.name === "削除されました" && 
-            !(existingMessage.message === "削除されました" && existingMessage.name === "削除されました")
+            message.message === "削除されました" &&
+            message.name === "削除されました" &&
+            !(
+              existingMessage.message === "削除されました" &&
+              existingMessage.name === "削除されました"
+            )
           ) {
-            const messageElement = document.getElementById(`message-${message.number}`);
+            const messageElement = document.getElementById(
+              `message-${message.number}`
+            );
             messageElement.classList.add("deleted-message");
             messageStore.set(message.number, message);
           }
@@ -396,9 +404,16 @@
           const response = await fetch(
             `/bbs/result?name=${encodeURIComponent(
               name
-            )}&message=${encodedMessage}&seed=${encodeURIComponent(
-              seed
-            )}&channel=${currentChannel}`
+            )}&seed=${encodeURIComponent(seed)}&channel=${currentChannel}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                message: encodedMessage,
+              }),
+            }
           );
 
           if (response.ok) {

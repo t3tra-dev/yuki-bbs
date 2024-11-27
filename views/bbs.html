@@ -24,7 +24,8 @@
     </script>
     <style>
       .message-container {
-        height: calc(100vh - 240px);
+        height: calc(100vh - 180px);
+        padding-bottom: 80px;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: #cbd5e0 #f2f3f5;
@@ -416,6 +417,46 @@
       if (localStorage.getItem("darkMode") === "true") {
         htmlElement.classList.add("dark");
       }
+
+      // メッセージ送信の処理を追加
+      const messageInput = document.getElementById("message");
+      const sendButton = document.getElementById("send");
+
+      async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        const name = localStorage.getItem("userName") || "名無し";
+        const seed = localStorage.getItem("userSeed") || "";
+
+        try {
+          const encodedMessage = btoa(unescape(encodeURIComponent(message)));
+          const response = await fetch(
+            `/bbs/result?name=${encodeURIComponent(
+              name
+            )}&message=${encodedMessage}&seed=${encodeURIComponent(
+              seed
+            )}&channel=${currentChannel}`
+          );
+
+          if (response.ok) {
+            messageInput.value = "";
+            fetchMessages(); // メッセージを即時更新
+          } else {
+            console.error("メッセージの送信に失敗しました");
+          }
+        } catch (error) {
+          console.error("エラーが発生しました:", error);
+        }
+      }
+
+      sendButton.addEventListener("click", sendMessage);
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
     </script>
   </body>
 </html>

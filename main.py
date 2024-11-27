@@ -166,11 +166,8 @@ async def write_bbs(request: Request):
         cookies={"yuki": "True"},
         allow_redirects=False,
     )
-    if t.status_code != 307:
-        return HTMLResponse(t.text)
-    return redirect(
-        f"/bbs?name={urllib.parse.quote(name)}&seed={urllib.parse.quote(seed)}&channel={urllib.parse.quote(channel)}&verify={urllib.parse.quote(verify)}"
-    )
+
+    return HTMLResponse(t.text)
 
 
 @cache(seconds=30)

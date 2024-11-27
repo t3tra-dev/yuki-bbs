@@ -67,7 +67,7 @@ def parse_html_to_json(html_content):
             # 追加テキストを取得
             extra_text = None
             extra_font = name_cell.find_all('font')[-1] if name_cell.find_all('font') else None
-            if extra_font and 'magenta' in extra_font.get('color', ''):
+            if extra_font and extra_font.get('color', '') == 'magenta':  # 完全一致チェックに変更
                 extra_text = extra_font.get_text()
 
             # 名前を取得（色付きフォントとIDを除いた部分）

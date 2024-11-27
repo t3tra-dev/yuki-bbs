@@ -34,14 +34,13 @@
       }
 
       .message-input-container {
-        position: fixed;
+        position: sticky;
         bottom: 0;
-        left: 0;
-        right: 0;
         background-color: #f8f9fa;
         padding: 1rem;
         border-top: 1px solid #dee2e6;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        margin: 0 -1.5rem;
       }
 
       textarea {
@@ -176,20 +175,14 @@
           <div id="messages" class="message-container mb-3"></div>
 
           <div class="message-input-container">
-            <div class="container-fluid">
-              <div class="row">
-                <div class="col-12">
-                  <div class="input-group">
-                    <textarea
-                      id="message"
-                      class="form-control"
-                      placeholder="メッセージを入力 (Shift + Enterで改行)"
-                      rows="1"
-                    ></textarea>
-                    <button id="send" class="btn btn-primary">送信</button>
-                  </div>
-                </div>
-              </div>
+            <div class="input-group">
+              <textarea
+                id="message"
+                class="form-control"
+                placeholder="メッセージを入力 (Shift + Enterで改行)"
+                rows="1"
+              ></textarea>
+              <button id="send" class="btn btn-primary">送信</button>
             </div>
           </div>
         </main>

@@ -19,9 +19,7 @@ from cache import cache
 
 max_api_wait_time = 3
 max_time = 10
-url = requests.get(
-    r"https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt"
-).text.rstrip()
+url = "https://yukibbs-server.onrender.com/"
 version = "1.0"
 
 

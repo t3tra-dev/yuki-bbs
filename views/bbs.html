@@ -1,196 +1,241 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>掲示板</title>
-    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
     <style>
-        .message-container {
-            height: calc(100vh - 220px);
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e0 #f1f5f9;
-        }
-        
-        .message-container::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .message-container::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        
-        .message-container::-webkit-scrollbar-thumb {
-            background-color: #cbd5e0;
-            border-radius: 4px;
-        }
+      .message-container {
+        height: calc(100vh - 220px);
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f1f5f9;
+      }
 
-        .message {
-            transition: background-color 0.2s ease;
-        }
+      .message-container::-webkit-scrollbar {
+        width: 8px;
+      }
 
-        .message:hover {
-            background-color: #f8fafc;
-        }
+      .message-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
 
-        .deleted-message {
-            border: 1px solid #ff6b6b;
-            background-color: #fff5f5;
-        }
+      .message-container::-webkit-scrollbar-thumb {
+        background-color: #cbd5e0;
+        border-radius: 4px;
+      }
 
-        .deleted-message:hover {
-            background-color: #ffe3e3;
-        }
+      .message {
+        transition: background-color 0.2s ease;
+      }
 
-        .message-input-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: white;
-            padding: 1.25rem;
-            border-top: 1px solid #e5e7eb;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-        }
+      .message:hover {
+        background-color: #f8fafc;
+      }
+
+      .deleted-message {
+        border: 1px solid #ff6b6b;
+        background-color: #fff5f5;
+      }
+
+      .deleted-message:hover {
+        background-color: #ffe3e3;
+      }
+
+      .message-input-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        padding: 1.25rem;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+      }
     </style>
-</head>
-<body class="bg-gray-50">
+  </head>
+  <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-6">
-        <div id="topic" class="mb-6 p-5 bg-white rounded-lg shadow-sm border border-gray-100"></div>
-        
-        <div id="messages" class="message-container space-y-3 px-1"></div>
+      <div
+        id="topic"
+        class="mb-6 p-5 bg-white rounded-lg shadow-sm border border-gray-100"
+      ></div>
 
-        <div class="message-input-container">
-            <div class="max-w-4xl mx-auto">
-                <div class="flex gap-3">
-                    <input type="text" id="name" placeholder="名前" 
-                           class="flex-none w-48 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                    <input type="text" id="message" placeholder="メッセージ" 
-                           class="flex-grow px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                    <button id="send" 
-                            class="flex-none px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition duration-150">
-                        送信
-                    </button>
-                </div>
-            </div>
+      <div id="messages" class="message-container space-y-3 px-1"></div>
+
+      <div class="message-input-container">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-4">
+            <select
+              id="channel"
+              class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
+            >
+              <option value="main">雑談</option>
+              <option value="battle">バトルスタジアム</option>
+            </select>
+          </div>
+          <div class="flex gap-3">
+            <input
+              type="text"
+              id="name"
+              placeholder="名前"
+              class="flex-none w-48 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            />
+            <input
+              type="text"
+              id="message"
+              placeholder="メッセージ"
+              class="flex-grow px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            />
+            <button
+              id="send"
+              class="flex-none px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition duration-150"
+            >
+              送信
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <script>
-        let messageStore = new Map();
+      let messageStore = new Map();
+      let currentChannel = "main";
 
-        function createMessageElement(message) {
-            const div = document.createElement('div');
-            div.id = `message-${message.number}`;
-            div.className = 'message p-4 bg-white rounded-lg shadow-sm border border-gray-100';
-            
-            if (message.message === "削除されました" && message.name === "削除されました") {
-                div.classList.add('deleted-message');
-            }
-
-            const header = document.createElement('div');
-            header.className = 'flex items-center gap-2 text-sm';
-
-            const numberSpan = document.createElement('span');
-            numberSpan.className = 'text-gray-500';
-            numberSpan.textContent = `${message.number}:`;
-
-            const nameSpan = document.createElement('span');
-            if (message.name_color) {
-                nameSpan.style.color = message.name_color;
-            }
-            nameSpan.className = 'font-medium';
-            nameSpan.textContent = message.name;
-
-            const idSpan = document.createElement('span');
-            if (message.id_color) {
-                idSpan.style.color = message.id_color;
-            }
-            idSpan.className = 'text-sm';
-            idSpan.textContent = message.user_id || '';
-
-            const extraSpan = document.createElement('span');
-            if (message.extra_text) {
-                extraSpan.style.color = 'magenta';
-                extraSpan.className = 'text-sm';
-                extraSpan.textContent = message.extra_text;
-            }
-
-            header.appendChild(numberSpan);
-            header.appendChild(nameSpan);
-            header.appendChild(idSpan);
-            header.appendChild(extraSpan);
-
-            const messageText = document.createElement('div');
-            messageText.className = 'mt-2 text-gray-700 whitespace-pre-wrap';
-            messageText.textContent = message.message;
-
-            div.appendChild(header);
-            div.appendChild(messageText);
-
-            return div;
-        }
-
-        function updateMessages(data) {
-            const topic = document.getElementById('topic');
-            topic.textContent = data.topic;
-
-            const messagesContainer = document.getElementById('messages');
-            
-            data.messages.reverse().forEach(message => {
-                const existingMessage = messageStore.get(message.number);
-                
-                if (!existingMessage) {
-                    // 新しいメッセージを追加
-                    const messageElement = createMessageElement(message);
-                    messagesContainer.appendChild(messageElement);
-                    messageStore.set(message.number, message);
-                } else if (
-                    message.message === "削除されました" && 
-                    message.name === "削除されました" &&
-                    (existingMessage.message !== "削除されました" || existingMessage.name !== "削除されました")
-                ) {
-                    // メッセージが削除された場合
-                    const messageElement = document.getElementById(`message-${message.number}`);
-                    messageElement.classList.add('deleted-message');
-                    messageStore.set(message.number, message);
-                }
-            });
-        }
-
-        async function fetchMessages() {
-            try {
-                const response = await fetch(`/bbs/api?t=${Date.now()}`);
-                const data = await response.json();
-                updateMessages(data);
-            } catch (error) {
-                console.error('メッセージの取得に失敗しました:', error);
-            }
-        }
-
-        // 初回読み込みと定期更新
-        fetchMessages();
-        setInterval(fetchMessages, 5000);
-
-        // スクロール位置の保持
-        const messagesContainer = document.getElementById('messages');
-        let isScrolledToBottom = true;
-
-        messagesContainer.addEventListener('scroll', () => {
-            isScrolledToBottom = Math.abs(
-                (messagesContainer.scrollHeight - messagesContainer.scrollTop) - 
-                messagesContainer.clientHeight
-            ) < 1;
+      // チャンネル変更時の処理
+      document
+        .getElementById("channel")
+        .addEventListener("change", function (e) {
+          currentChannel = e.target.value;
+          messageStore.clear(); // メッセージストアをクリア
+          const messagesContainer = document.getElementById("messages");
+          messagesContainer.innerHTML = ""; // メッセージコンテナをクリア
+          fetchMessages(); // 新しいチャンネルのメッセージを取得
         });
 
-        const observer = new MutationObserver(() => {
-            if (isScrolledToBottom) {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        });
+      function createMessageElement(message) {
+        const div = document.createElement("div");
+        div.id = `message-${message.number}`;
+        div.className =
+          "message p-4 bg-white rounded-lg shadow-sm border border-gray-100";
 
-        observer.observe(messagesContainer, { childList: true, subtree: true });
+        if (
+          message.message === "削除されました" &&
+          message.name === "削除されました"
+        ) {
+          div.classList.add("deleted-message");
+        }
+
+        const header = document.createElement("div");
+        header.className = "flex items-center gap-2 text-sm";
+
+        const numberSpan = document.createElement("span");
+        numberSpan.className = "text-gray-500";
+        numberSpan.textContent = `${message.number}:`;
+
+        const nameSpan = document.createElement("span");
+        if (message.name_color) {
+          nameSpan.style.color = message.name_color;
+        }
+        nameSpan.className = "font-medium";
+        nameSpan.textContent = message.name;
+
+        const idSpan = document.createElement("span");
+        if (message.id_color) {
+          idSpan.style.color = message.id_color;
+        }
+        idSpan.className = "text-sm";
+        idSpan.textContent = message.user_id || "";
+
+        const extraSpan = document.createElement("span");
+        if (message.extra_text) {
+          extraSpan.style.color = "magenta";
+          extraSpan.className = "text-sm";
+          extraSpan.textContent = message.extra_text;
+        }
+
+        header.appendChild(numberSpan);
+        header.appendChild(nameSpan);
+        header.appendChild(idSpan);
+        header.appendChild(extraSpan);
+
+        const messageText = document.createElement("div");
+        messageText.className = "mt-2 text-gray-700 whitespace-pre-wrap";
+        messageText.textContent = message.message;
+
+        div.appendChild(header);
+        div.appendChild(messageText);
+
+        return div;
+      }
+
+      function updateMessages(data) {
+        const topic = document.getElementById("topic");
+        topic.textContent = data.topic;
+
+        const messagesContainer = document.getElementById("messages");
+
+        data.messages.reverse().forEach((message) => {
+          const existingMessage = messageStore.get(message.number);
+
+          if (!existingMessage) {
+            // 新しいメッセージを追加
+            const messageElement = createMessageElement(message);
+            messagesContainer.appendChild(messageElement);
+            messageStore.set(message.number, message);
+          } else if (
+            message.message === "削除されました" &&
+            message.name === "削除されました" &&
+            (existingMessage.message !== "削除されました" ||
+              existingMessage.name !== "削除されました")
+          ) {
+            // メッセージが削除された場合
+            const messageElement = document.getElementById(
+              `message-${message.number}`
+            );
+            messageElement.classList.add("deleted-message");
+            messageStore.set(message.number, message);
+          }
+        });
+      }
+
+      async function fetchMessages() {
+        try {
+          const response = await fetch(
+            `/bbs/api?t=${Date.now()}&channel=${currentChannel}`
+          );
+          const data = await response.json();
+          updateMessages(data);
+        } catch (error) {
+          console.error("メッセージの取得に失敗しました:", error);
+        }
+      }
+
+      // 初回読み込みと定期更新
+      fetchMessages();
+      setInterval(fetchMessages, 5000);
+
+      // スクロール位置の保持
+      const messagesContainer = document.getElementById("messages");
+      let isScrolledToBottom = true;
+
+      messagesContainer.addEventListener("scroll", () => {
+        isScrolledToBottom =
+          Math.abs(
+            messagesContainer.scrollHeight -
+              messagesContainer.scrollTop -
+              messagesContainer.clientHeight
+          ) < 1;
+      });
+
+      const observer = new MutationObserver(() => {
+        if (isScrolledToBottom) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+      });
+
+      observer.observe(messagesContainer, { childList: true, subtree: true });
     </script>
-</body>
+  </body>
 </html>

@@ -4,57 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>掲示板</title>
-    <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        discord: {
-                            light: "#f2f3f5",
-                            dark: "#36393f",
-                            darker: "#2f3136",
-                            sidebar: "#202225",
-                        },
-                    },
-                },
-            },
-        };
-    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* Custom styles */
         .message-container {
             height: calc(100vh - 180px);
             padding-bottom: 80px;
             overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e0 #f2f3f5;
-        }
-
-        .dark .message-container {
-            scrollbar-color: #4a4d52 #2f3136;
-        }
-
-        .message-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .message-container::-webkit-scrollbar-track {
-            background: #f2f3f5;
-        }
-
-        .dark .message-container::-webkit-scrollbar-track {
-            background: #2f3136;
-        }
-
-        .message-container::-webkit-scrollbar-thumb {
-            background-color: #cbd5e0;
-            border-radius: 4px;
-        }
-
-        .dark .message-container::-webkit-scrollbar-thumb {
-            background-color: #4a4d52;
         }
 
         .message {
@@ -62,11 +18,7 @@
         }
 
         .message:hover {
-            background-color: #f8fafc;
-        }
-
-        .dark .message:hover {
-            background-color: #32353b;
+            background-color: rgba(0, 0, 0, 0.05);
         }
 
         .deleted-message {
@@ -74,17 +26,8 @@
             background-color: #fff5f5;
         }
 
-        .dark .deleted-message {
-            border-color: #a33;
-            background-color: #3a2f2f;
-        }
-
         .deleted-message:hover {
             background-color: #ffe3e3;
-        }
-
-        .dark .deleted-message:hover {
-            background-color: #3f3535;
         }
 
         .message-input-container {
@@ -92,16 +35,10 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background-color: #f2f3f5;
+            background-color: #f8f9fa;
             padding: 1rem;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #dee2e6;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .dark .message-input-container {
-            background-color: #36393f;
-            border-top-color: #202225;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
         }
 
         textarea {
@@ -119,89 +56,113 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            z-index: 50;
+            z-index: 1040;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            z-index: 51;
-            width: 90%;
-            max-width: 500px;
-        }
-
-        .dark .modal {
+        body.dark-mode {
             background-color: #36393f;
-            border: 1px solid #202225;
+            color: #ffffff;
+        }
+
+        body.dark-mode .bg-light {
+            background-color: #2f3136 !important;
+        }
+
+        body.dark-mode .border {
+            border-color: #202225 !important;
+        }
+
+        body.dark-mode .message-input-container {
+            background-color: #36393f;
+            border-top-color: #202225;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: #40444b;
+            border-color: #202225;
+            color: #ffffff;
+        }
+
+        body.dark-mode .modal-content {
+            background-color: #36393f;
+            border-color: #202225;
         }
     </style>
 </head>
-<body class="bg-discord-light dark:bg-discord-dark text-gray-900 dark:text-gray-100">
+<body>
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal">
-        <h2 class="text-xl font-bold mb-4">設定</h2>
-        <div class="space-y-4">
-            <div>
-                <label for="modalName" class="block text-sm font-medium mb-1">名前</label>
-                <input type="text" id="modalName" class="w-full px-4 py-2.5 bg-white dark:bg-discord-darker border border-gray-300 dark:border-gray-600 rounded-lg" />
-            </div>
-            <div>
-                <label for="modalSeed" class="block text-sm font-medium mb-1">シード</label>
-                <input type="text" id="modalSeed" class="w-full px-4 py-2.5 bg-white dark:bg-discord-darker border border-gray-300 dark:border-gray-600 rounded-lg" />
-            </div>
-            <div class="flex justify-end gap-3">
-                <button id="saveSettings" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                    保存
-                </button>
-            </div>
-        </div>
-    </div>
-    <div id="modalBackdrop" class="modal-backdrop"></div>
-
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="w-64 bg-discord-sidebar text-white p-4">
-            <h1 class="text-xl font-bold mb-4">掲示板</h1>
-            <div class="mb-4">
-                <select id="channel" class="w-full px-3 py-2 bg-discord-darker text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                    <option value="main">雑談</option>
-                    <option value="battle">バトルスタジアム</option>
-                </select>
-            </div>
-            <button id="darkModeToggle" class="w-full px-4 py-2 bg-discord-darker text-white rounded-md hover:bg-gray-700 transition duration-150">
-                ダークモード切替
-            </button>
-            <button id="settingsButton" class="w-full px-4 py-2 bg-discord-darker text-white rounded-md hover:bg-gray-700 transition duration-150 mt-2">
-                設定
-            </button>
-        </div>
-
-        <!-- Main content -->
-        <div class="flex-1 flex flex-col">
-            <div class="flex-1 overflow-hidden">
-                <div id="topic" class="p-4 bg-discord-light dark:bg-discord-darker border-b border-gray-200 dark:border-gray-700"></div>
-                <div id="messages" class="message-container p-4 space-y-3"></div>
-            </div>
-
-            <div class="message-input-container">
-                <div class="max-w-4xl mx-auto flex gap-3">
-                    <textarea id="message" placeholder="メッセージを入力 (Shift + Enterで改行)" class="flex-grow px-4 py-2.5 bg-white dark:bg-discord-darker border border-gray-300 dark:border-gray-600 rounded-lg" rows="1"></textarea>
-                    <button id="send" class="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 whitespace-nowrap">
-                        送信
-                    </button>
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">設定</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="modalName" class="form-label">名前</label>
+                        <input type="text" class="form-control" id="modalName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalSeed" class="form-label">シード</label>
+                        <input type="text" class="form-control" id="modalSeed">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                    <button type="button" class="btn btn-primary" id="saveSettings">保存</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="container-fluid vh-100">
+        <div class="row h-100">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h1 class="h4 mb-4">掲示板</h1>
+                    <div class="mb-3">
+                        <select id="channel" class="form-select">
+                            <option value="main">雑談</option>
+                            <option value="battle">バトルスタジアム</option>
+                        </select>
+                    </div>
+                    <button id="darkModeToggle" class="btn btn-secondary w-100 mb-2">
+                        ダークモード切替
+                    </button>
+                    <button id="settingsButton" class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                        設定
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div id="topic" class="py-3 mb-3 border-bottom"></div>
+                <div id="messages" class="message-container mb-3"></div>
+
+                <div class="message-input-container">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group">
+                                    <textarea id="message" class="form-control" placeholder="メッセージを入力 (Shift + Enterで改行)" rows="1"></textarea>
+                                    <button id="send" class="btn btn-primary">送信</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // JavaScript code
+        // JavaScript code (unchanged)
         let messageStore = new Map();
         let currentChannel = "main";
 
@@ -215,31 +176,23 @@
 
         // Modal related functions
         const settingsButton = document.getElementById("settingsButton");
-        const settingsModal = document.getElementById("settingsModal");
-        const modalBackdrop = document.getElementById("modalBackdrop");
+        const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
         const saveSettings = document.getElementById("saveSettings");
         const modalName = document.getElementById("modalName");
         const modalSeed = document.getElementById("modalSeed");
 
         function openModal() {
-            settingsModal.style.display = "block";
-            modalBackdrop.style.display = "block";
             modalName.value = localStorage.getItem("userName") || "";
             modalSeed.value = localStorage.getItem("userSeed") || "";
-        }
-
-        function closeModal() {
-            settingsModal.style.display = "none";
-            modalBackdrop.style.display = "none";
+            settingsModal.show();
         }
 
         settingsButton.addEventListener("click", openModal);
-        modalBackdrop.addEventListener("click", closeModal);
 
         saveSettings.addEventListener("click", () => {
             localStorage.setItem("userName", modalName.value);
             localStorage.setItem("userSeed", modalSeed.value);
-            closeModal();
+            settingsModal.hide();
         });
 
         // Load settings on page load
@@ -252,37 +205,37 @@
         function createMessageElement(message) {
             const div = document.createElement("div");
             div.id = `message-${message.number}`;
-            div.className = "message p-4 bg-white dark:bg-discord-dark rounded-lg shadow-sm border border-gray-200 dark:border-gray-700";
+            div.className = "message p-3 bg-light rounded mb-2 border";
 
             if (message.message === "削除されました" && message.name === "削除されました") {
                 div.classList.add("deleted-message");
             }
 
             const header = document.createElement("div");
-            header.className = "flex items-center gap-2 text-sm";
+            header.className = "d-flex align-items-center gap-2 small";
 
             const numberSpan = document.createElement("span");
-            numberSpan.className = "text-gray-500 dark:text-gray-400";
+            numberSpan.className = "text-muted";
             numberSpan.textContent = `${message.number}:`;
 
             const nameSpan = document.createElement("span");
             if (message.name_color) {
                 nameSpan.style.color = message.name_color;
             }
-            nameSpan.className = "font-medium";
+            nameSpan.className = "fw-bold";
             nameSpan.textContent = message.name;
 
             const idSpan = document.createElement("span");
             if (message.id_color) {
                 idSpan.style.color = message.id_color;
             }
-            idSpan.className = "text-sm";
+            idSpan.className = "small";
             idSpan.textContent = message.user_id || "";
 
             const extraSpan = document.createElement("span");
             if (message.extra_text) {
                 extraSpan.style.color = "magenta";
-                extraSpan.className = "text-sm";
+                extraSpan.className = "small";
                 extraSpan.textContent = message.extra_text;
             }
 
@@ -292,7 +245,7 @@
             header.appendChild(extraSpan);
 
             const messageText = document.createElement("div");
-            messageText.className = "mt-2 text-gray-700 dark:text-gray-300 whitespace-pre-wrap";
+            messageText.className = "mt-2 text-break";
             messageText.innerHTML = message.message;
 
             div.appendChild(header);
@@ -363,16 +316,16 @@
 
         // Dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
-        const htmlElement = document.documentElement;
+        const body = document.body;
 
         darkModeToggle.addEventListener("click", () => {
-            htmlElement.classList.toggle("dark");
-            localStorage.setItem("darkMode", htmlElement.classList.contains("dark"));
+            body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", body.classList.contains("dark-mode"));
         });
 
         // Restore dark mode state on page load
         if (localStorage.getItem("darkMode") === "true") {
-            htmlElement.classList.add("dark");
+            body.classList.add("dark-mode");
         }
 
         // Message sending

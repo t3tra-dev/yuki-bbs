@@ -1,390 +1,442 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>掲示板</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <style>
-        /* Custom styles */
-        .message-container {
-            height: calc(100vh - 180px);
-            padding-bottom: 80px;
-            overflow-y: auto;
-        }
+      /* Custom styles */
+      .message-container {
+        height: calc(100vh - 180px);
+        padding-bottom: 80px;
+        overflow-y: auto;
+      }
 
-        .message {
-            transition: background-color 0.2s ease;
-        }
+      .message {
+        transition: background-color 0.2s ease;
+      }
 
-        .message:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
+      .message:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
 
-        .deleted-message {
-            border: 1px solid #ff6b6b;
-            background-color: #fff5f5;
-        }
+      .deleted-message {
+        border: 1px solid #ff6b6b;
+        background-color: #fff5f5;
+      }
 
-        .deleted-message:hover {
-            background-color: #ffe3e3;
-        }
+      .deleted-message:hover {
+        background-color: #ffe3e3;
+      }
 
-        .message-input-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-top: 1px solid #dee2e6;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-        }
+      .message-input-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-top: 1px solid #dee2e6;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+      }
 
-        textarea {
-            resize: none;
-            min-height: 44px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
+      textarea {
+        resize: none;
+        min-height: 44px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
 
-        .modal-backdrop {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1040;
-        }
+      .modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+      }
 
-        body.dark-mode {
-            background-color: #36393f;
-            color: #ffffff;
-        }
+      body.dark-mode {
+        background-color: #36393f;
+        color: #ffffff;
+      }
 
-        body.dark-mode .bg-light {
-            background-color: #2f3136 !important;
-        }
+      body.dark-mode .bg-light {
+        background-color: #2f3136 !important;
+      }
 
-        body.dark-mode .border {
-            border-color: #202225 !important;
-        }
+      body.dark-mode .border {
+        border-color: #202225 !important;
+      }
 
-        body.dark-mode .message-input-container {
-            background-color: #36393f;
-            border-top-color: #202225;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-        }
+      body.dark-mode .text-muted {
+        color: #dcddde !important;
+      }
 
-        body.dark-mode .form-control,
-        body.dark-mode .form-select {
-            background-color: #40444b;
-            border-color: #202225;
-            color: #ffffff;
-        }
+      body.dark-mode .message-input-container {
+        background-color: #36393f;
+        border-top-color: #202225;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+      }
 
-        body.dark-mode .modal-content {
-            background-color: #36393f;
-            border-color: #202225;
-        }
+      body.dark-mode .form-control,
+      body.dark-mode .form-select {
+        background-color: #40444b;
+        border-color: #202225;
+        color: #ffffff;
+      }
+
+      body.dark-mode .modal-content {
+        background-color: #36393f;
+        border-color: #202225;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Settings Modal -->
-    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="settingsModalLabel">設定</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="modalName" class="form-label">名前</label>
-                        <input type="text" class="form-control" id="modalName">
-                    </div>
-                    <div class="mb-3">
-                        <label for="modalSeed" class="form-label">シード</label>
-                        <input type="text" class="form-control" id="modalSeed">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-                    <button type="button" class="btn btn-primary" id="saveSettings">保存</button>
-                </div>
+    <div
+      class="modal fade"
+      id="settingsModal"
+      tabindex="-1"
+      aria-labelledby="settingsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="settingsModalLabel">設定</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="modalName" class="form-label">名前</label>
+              <input type="text" class="form-control" id="modalName" />
             </div>
+            <div class="mb-3">
+              <label for="modalSeed" class="form-label">シード</label>
+              <input type="text" class="form-control" id="modalSeed" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              閉じる
+            </button>
+            <button type="button" class="btn btn-primary" id="saveSettings">
+              保存
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <div class="container-fluid vh-100">
-        <div class="row h-100">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="position-sticky pt-3">
-                    <h1 class="h4 mb-4">掲示板</h1>
-                    <div class="mb-3">
-                        <select id="channel" class="form-select">
-                            <option value="main">雑談</option>
-                            <option value="battle">バトルスタジアム</option>
-                        </select>
-                    </div>
-                    <button id="darkModeToggle" class="btn btn-secondary w-100 mb-2">
-                        ダークモード切替
-                    </button>
-                    <button id="settingsButton" class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                        設定
-                    </button>
-                </div>
+      <div class="row h-100">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+          <div class="position-sticky pt-3">
+            <h1 class="h4 mb-4">掲示板</h1>
+            <div class="mb-3">
+              <select id="channel" class="form-select">
+                <option value="main">雑談</option>
+                <option value="battle">バトルスタジアム</option>
+              </select>
             </div>
-
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div id="topic" class="py-3 mb-3 border-bottom"></div>
-                <div id="messages" class="message-container mb-3"></div>
-
-                <div class="message-input-container">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group">
-                                    <textarea id="message" class="form-control" placeholder="メッセージを入力 (Shift + Enterで改行)" rows="1"></textarea>
-                                    <button id="send" class="btn btn-primary">送信</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
+            <button id="darkModeToggle" class="btn btn-secondary w-100 mb-2">
+              ダークモード切替
+            </button>
+            <button
+              id="settingsButton"
+              class="btn btn-secondary w-100"
+              data-bs-toggle="modal"
+              data-bs-target="#settingsModal"
+            >
+              設定
+            </button>
+          </div>
         </div>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div id="topic" class="py-3 mb-3 border-bottom"></div>
+          <div id="messages" class="message-container mb-3"></div>
+
+          <div class="message-input-container">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-12">
+                  <div class="input-group">
+                    <textarea
+                      id="message"
+                      class="form-control"
+                      placeholder="メッセージを入力 (Shift + Enterで改行)"
+                      rows="1"
+                    ></textarea>
+                    <button id="send" class="btn btn-primary">送信</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // JavaScript code (unchanged)
-        let messageStore = new Map();
-        let currentChannel = "main";
+      // JavaScript code (unchanged)
+      let messageStore = new Map();
+      let currentChannel = "main";
 
-        // Channel change handler
-        document.getElementById("channel").addEventListener("change", function (e) {
-            currentChannel = e.target.value;
-            messageStore.clear();
-            document.getElementById("messages").innerHTML = "";
-            fetchMessages();
+      // Channel change handler
+      document
+        .getElementById("channel")
+        .addEventListener("change", function (e) {
+          currentChannel = e.target.value;
+          messageStore.clear();
+          document.getElementById("messages").innerHTML = "";
+          fetchMessages();
         });
 
-        // Modal related functions
-        const settingsButton = document.getElementById("settingsButton");
-        const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
-        const saveSettings = document.getElementById("saveSettings");
-        const modalName = document.getElementById("modalName");
-        const modalSeed = document.getElementById("modalSeed");
+      // Modal related functions
+      const settingsButton = document.getElementById("settingsButton");
+      const settingsModal = new bootstrap.Modal(
+        document.getElementById("settingsModal")
+      );
+      const saveSettings = document.getElementById("saveSettings");
+      const modalName = document.getElementById("modalName");
+      const modalSeed = document.getElementById("modalSeed");
 
-        function openModal() {
-            modalName.value = localStorage.getItem("userName") || "";
-            modalSeed.value = localStorage.getItem("userSeed") || "";
-            settingsModal.show();
+      function openModal() {
+        modalName.value = localStorage.getItem("userName") || "";
+        modalSeed.value = localStorage.getItem("userSeed") || "";
+        settingsModal.show();
+      }
+
+      settingsButton.addEventListener("click", openModal);
+
+      saveSettings.addEventListener("click", () => {
+        localStorage.setItem("userName", modalName.value);
+        localStorage.setItem("userSeed", modalSeed.value);
+        settingsModal.hide();
+      });
+
+      // Load settings on page load
+      window.addEventListener("load", () => {
+        if (!localStorage.getItem("userName")) {
+          openModal();
+        }
+      });
+
+      function createMessageElement(message) {
+        const div = document.createElement("div");
+        div.id = `message-${message.number}`;
+        div.className = "message p-3 bg-light rounded mb-2 border";
+
+        if (
+          message.message === "削除されました" &&
+          message.name === "削除されました"
+        ) {
+          div.classList.add("deleted-message");
         }
 
-        settingsButton.addEventListener("click", openModal);
+        const header = document.createElement("div");
+        header.className = "d-flex align-items-center gap-2 small";
 
-        saveSettings.addEventListener("click", () => {
-            localStorage.setItem("userName", modalName.value);
-            localStorage.setItem("userSeed", modalSeed.value);
-            settingsModal.hide();
-        });
+        const numberSpan = document.createElement("span");
+        numberSpan.className = "text-muted";
+        numberSpan.textContent = `${message.number}:`;
 
-        // Load settings on page load
-        window.addEventListener("load", () => {
-            if (!localStorage.getItem("userName")) {
-                openModal();
-            }
-        });
+        const nameSpan = document.createElement("span");
+        if (message.name_color) {
+          nameSpan.style.color = message.name_color;
+        }
+        nameSpan.className = "fw-bold";
+        nameSpan.textContent = message.name;
 
-        function createMessageElement(message) {
-            const div = document.createElement("div");
-            div.id = `message-${message.number}`;
-            div.className = "message p-3 bg-light rounded mb-2 border";
+        const idSpan = document.createElement("span");
+        if (message.id_color) {
+          idSpan.style.color = message.id_color;
+        }
+        idSpan.className = "small";
+        idSpan.textContent = message.user_id || "";
 
-            if (message.message === "削除されました" && message.name === "削除されました") {
-                div.classList.add("deleted-message");
-            }
-
-            const header = document.createElement("div");
-            header.className = "d-flex align-items-center gap-2 small";
-
-            const numberSpan = document.createElement("span");
-            numberSpan.className = "text-muted";
-            numberSpan.textContent = `${message.number}:`;
-
-            const nameSpan = document.createElement("span");
-            if (message.name_color) {
-                nameSpan.style.color = message.name_color;
-            }
-            nameSpan.className = "fw-bold";
-            nameSpan.textContent = message.name;
-
-            const idSpan = document.createElement("span");
-            if (message.id_color) {
-                idSpan.style.color = message.id_color;
-            }
-            idSpan.className = "small";
-            idSpan.textContent = message.user_id || "";
-
-            const extraSpan = document.createElement("span");
-            if (message.extra_text) {
-                extraSpan.style.color = "magenta";
-                extraSpan.className = "small";
-                extraSpan.textContent = message.extra_text;
-            }
-
-            header.appendChild(numberSpan);
-            header.appendChild(nameSpan);
-            header.appendChild(idSpan);
-            header.appendChild(extraSpan);
-
-            const messageText = document.createElement("div");
-            messageText.className = "mt-2 text-break";
-            messageText.innerHTML = message.message;
-
-            div.appendChild(header);
-            div.appendChild(messageText);
-
-            return div;
+        const extraSpan = document.createElement("span");
+        if (message.extra_text) {
+          extraSpan.style.color = "magenta";
+          extraSpan.className = "small";
+          extraSpan.textContent = message.extra_text;
         }
 
-        function updateMessages(data) {
-            const topic = document.getElementById("topic");
-            topic.textContent = data.topic;
+        header.appendChild(numberSpan);
+        header.appendChild(nameSpan);
+        header.appendChild(idSpan);
+        header.appendChild(extraSpan);
 
-            const messagesContainer = document.getElementById("messages");
+        const messageText = document.createElement("div");
+        messageText.className = "mt-2 text-break";
+        messageText.innerHTML = message.message;
 
-            data.messages.reverse().forEach((message) => {
-                const existingMessage = messageStore.get(message.number);
+        div.appendChild(header);
+        div.appendChild(messageText);
 
-                if (!existingMessage) {
-                    const messageElement = createMessageElement(message);
-                    messagesContainer.appendChild(messageElement);
-                    messageStore.set(message.number, message);
-                } else if (
-                    message.message === "削除されました" &&
-                    message.name === "削除されました" &&
-                    (existingMessage.message !== "削除されました" ||
-                        existingMessage.name !== "削除されました")
-                ) {
-                    const messageElement = document.getElementById(`message-${message.number}`);
-                    messageElement.classList.add("deleted-message");
-                    messageStore.set(message.number, message);
-                }
-            });
-        }
+        return div;
+      }
 
-        async function fetchMessages() {
-            try {
-                const response = await fetch(`/bbs/api?t=${Date.now()}&channel=${currentChannel}`);
-                const data = await response.json();
-                updateMessages(data);
-            } catch (error) {
-                console.error("メッセージの取得に失敗しました:", error);
-            }
-        }
+      function updateMessages(data) {
+        const topic = document.getElementById("topic");
+        topic.textContent = data.topic;
 
-        // Initial load and periodic update
-        fetchMessages();
-        setInterval(fetchMessages, 5000);
-
-        // Scroll position management
         const messagesContainer = document.getElementById("messages");
-        let isScrolledToBottom = true;
 
-        messagesContainer.addEventListener("scroll", () => {
-            isScrolledToBottom = Math.abs(
-                messagesContainer.scrollHeight -
-                messagesContainer.scrollTop -
-                messagesContainer.clientHeight
-            ) < 1;
+        data.messages.reverse().forEach((message) => {
+          const existingMessage = messageStore.get(message.number);
+
+          if (!existingMessage) {
+            const messageElement = createMessageElement(message);
+            messagesContainer.appendChild(messageElement);
+            messageStore.set(message.number, message);
+          } else if (
+            message.message === "削除されました" &&
+            message.name === "削除されました" &&
+            (existingMessage.message !== "削除されました" ||
+              existingMessage.name !== "削除されました")
+          ) {
+            const messageElement = document.getElementById(
+              `message-${message.number}`
+            );
+            messageElement.classList.add("deleted-message");
+            messageStore.set(message.number, message);
+          }
         });
+      }
 
-        const observer = new MutationObserver(() => {
-            if (isScrolledToBottom) {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        });
-
-        observer.observe(messagesContainer, { childList: true, subtree: true });
-
-        // Dark mode toggle
-        const darkModeToggle = document.getElementById("darkModeToggle");
-        const body = document.body;
-
-        darkModeToggle.addEventListener("click", () => {
-            body.classList.toggle("dark-mode");
-            localStorage.setItem("darkMode", body.classList.contains("dark-mode"));
-        });
-
-        // Restore dark mode state on page load
-        if (localStorage.getItem("darkMode") === "true") {
-            body.classList.add("dark-mode");
+      async function fetchMessages() {
+        try {
+          const response = await fetch(
+            `/bbs/api?t=${Date.now()}&channel=${currentChannel}`
+          );
+          const data = await response.json();
+          updateMessages(data);
+        } catch (error) {
+          console.error("メッセージの取得に失敗しました:", error);
         }
+      }
 
-        // Message sending
-        const messageInput = document.getElementById("message");
-        const sendButton = document.getElementById("send");
-        let isSending = false;
+      // Initial load and periodic update
+      fetchMessages();
+      setInterval(fetchMessages, 5000);
 
-        async function sendMessage() {
-            if (isSending) return;
+      // Scroll position management
+      const messagesContainer = document.getElementById("messages");
+      let isScrolledToBottom = true;
 
-            const message = messageInput.value.trim();
-            if (!message) return;
+      messagesContainer.addEventListener("scroll", () => {
+        isScrolledToBottom =
+          Math.abs(
+            messagesContainer.scrollHeight -
+              messagesContainer.scrollTop -
+              messagesContainer.clientHeight
+          ) < 1;
+      });
 
-            isSending = true;
-            const name = localStorage.getItem("userName") || "名無し";
-            const seed = localStorage.getItem("userSeed") || "";
-
-            try {
-                const encodedMessage = btoa(unescape(encodeURIComponent(message)));
-                const response = await fetch(
-                    `/bbs/result?name=${encodeURIComponent(name)}&message=${encodedMessage}&seed=${encodeURIComponent(seed)}&channel=${currentChannel}`
-                );
-
-                if (response.ok) {
-                    messageInput.value = "";
-                    messageInput.style.height = "auto";
-                    fetchMessages();
-                } else {
-                    console.error("メッセージの送信に失敗しました");
-                }
-            } catch (error) {
-                console.error("エラーが発生しました:", error);
-            } finally {
-                isSending = false;
-            }
+      const observer = new MutationObserver(() => {
+        if (isScrolledToBottom) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
+      });
 
-        sendButton.addEventListener("click", sendMessage);
-        messageInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
+      observer.observe(messagesContainer, { childList: true, subtree: true });
 
-        // Textarea auto-resize
-        messageInput.addEventListener("input", function () {
-            this.style.height = "auto";
-            this.style.height = this.scrollHeight + "px";
-        });
+      // Dark mode toggle
+      const darkModeToggle = document.getElementById("darkModeToggle");
+      const body = document.body;
 
-        // Enter key handling (updated)
-        messageInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-                messageInput.style.height = "auto";
-            }
-        });
+      darkModeToggle.addEventListener("click", () => {
+        body.classList.toggle("dark-mode");
+        localStorage.setItem("darkMode", body.classList.contains("dark-mode"));
+      });
+
+      // Restore dark mode state on page load
+      if (localStorage.getItem("darkMode") === "true") {
+        body.classList.add("dark-mode");
+      }
+
+      // Message sending
+      const messageInput = document.getElementById("message");
+      const sendButton = document.getElementById("send");
+      let isSending = false;
+
+      async function sendMessage() {
+        if (isSending) return;
+
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        isSending = true;
+        const name = localStorage.getItem("userName") || "名無し";
+        const seed = localStorage.getItem("userSeed") || "";
+
+        try {
+          const encodedMessage = btoa(unescape(encodeURIComponent(message)));
+          const response = await fetch(
+            `/bbs/result?name=${encodeURIComponent(
+              name
+            )}&message=${encodedMessage}&seed=${encodeURIComponent(
+              seed
+            )}&channel=${currentChannel}`
+          );
+
+          if (response.ok) {
+            messageInput.value = "";
+            messageInput.style.height = "auto";
+            fetchMessages();
+          } else {
+            console.error("メッセージの送信に失敗しました");
+          }
+        } catch (error) {
+          console.error("エラーが発生しました:", error);
+        } finally {
+          isSending = false;
+        }
+      }
+
+      sendButton.addEventListener("click", sendMessage);
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      // Textarea auto-resize
+      messageInput.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+      });
+
+      // Enter key handling (updated)
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+          messageInput.style.height = "auto";
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

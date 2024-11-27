@@ -152,16 +152,14 @@ def view_bbs(
 
 
 @app.post("/bbs/result")
-async def write_bbs(
-    request: Request,
-    name: str = "",
-    seed: Union[str, None] = "",
-    channel: Union[str, None] = "main",
-    verify: Union[str, None] = "false",
-):
+async def write_bbs(request: Request):
     body = await request.json()
     message = base64.b64decode(body['message']).decode("utf-8")
     message = message.replace('\n', '<br>')
+    name = body.get('name', '')
+    seed = body.get('seed', '')
+    channel = body.get('channel', 'main')
+    verify = body.get('verify', 'false')
 
     t = requests.get(
         rf"{url}bbs/result?name={urllib.parse.quote(name)}&message={urllib.parse.quote(message)}&seed={urllib.parse.quote(seed)}&channel={urllib.parse.quote(channel)}&verify={urllib.parse.quote(verify)}&info={urllib.parse.quote(get_info(request))}",

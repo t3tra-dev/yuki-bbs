@@ -401,20 +401,19 @@
 
         try {
           const encodedMessage = btoa(unescape(encodeURIComponent(message)));
-          const response = await fetch(
-            `/bbs/result?name=${encodeURIComponent(
-              name
-            )}&seed=${encodeURIComponent(seed)}&channel=${currentChannel}`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                message: encodedMessage,
-              }),
-            }
-          );
+          const response = await fetch("/bbs/result", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: encodedMessage,
+              name: name,
+              seed: seed,
+              channel: currentChannel,
+              verify: "false",
+            }),
+          });
 
           if (response.ok) {
             messageInput.value = "";

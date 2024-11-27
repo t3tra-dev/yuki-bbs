@@ -92,7 +92,7 @@
         left: 0;
         right: 0;
         background-color: #f2f3f5;
-        padding: 1.25rem;
+        padding: 1rem;
         border-top: 1px solid #e5e7eb;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
       }
@@ -101,6 +101,13 @@
         background-color: #36393f;
         border-top-color: #202225;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      textarea {
+        resize: none;
+        min-height: 44px;
+        max-height: 200px;
+        overflow-y: auto;
       }
 
       /* モーダル関連のスタイルを追加 */
@@ -211,12 +218,13 @@
           <div class="max-w-4xl mx-auto flex gap-3">
             <textarea
               id="message"
-              placeholder="メッセージ"
+              placeholder="メッセージを入力 (Shift + Enterで改行)"
               class="flex-grow px-4 py-2.5 bg-white dark:bg-discord-darker border border-gray-300 dark:border-gray-600 rounded-lg"
+              rows="1"
             ></textarea>
             <button
               id="send"
-              class="flex-none px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 whitespace-nowrap"
             >
               送信
             </button>
@@ -454,6 +462,23 @@
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           sendMessage();
+        }
+      });
+
+      const textarea = document.getElementById("message");
+
+      textarea.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+      });
+
+      // Enterキーの処理を更新
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+          // 送信後にtextareaの高さをリセット
+          messageInput.style.height = "auto";
         }
       });
     </script>

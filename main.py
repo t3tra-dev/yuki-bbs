@@ -161,6 +161,7 @@ def write_bbs(
     verify: Union[str, None] = "false",
 ):
     message = base64.b64decode(message).decode("utf-8")
+    message = message.replace('\n', '<br>')
     t = requests.get(
         rf"{url}bbs/result?name={urllib.parse.quote(name)}&message={urllib.parse.quote(message)}&seed={urllib.parse.quote(seed)}&channel={urllib.parse.quote(channel)}&verify={urllib.parse.quote(verify)}&info={urllib.parse.quote(get_info(request))}",
         cookies={"yuki": "True"},

@@ -308,14 +308,12 @@
 
           if (!existingMessage) {
             const messageElement = createMessageElement(message);
+            if (message.deleted) {
+              messageElement.classList.add("deleted-message");
+            }
             messagesContainer.appendChild(messageElement);
             messageStore.set(message.number, message);
-          } else if (
-            message.message === "削除されました" &&
-            message.name === "削除されました" &&
-            (existingMessage.message !== "削除されました" ||
-              existingMessage.name !== "削除されました")
-          ) {
+          } else if (message.deleted && !existingMessage.deleted) {
             const messageElement = document.getElementById(
               `message-${message.number}`
             );

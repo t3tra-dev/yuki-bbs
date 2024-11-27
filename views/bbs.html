@@ -7,36 +7,71 @@
     <link href="https://cdn.tailwindcss.com" rel="stylesheet">
     <style>
         .message-container {
-            height: calc(100vh - 180px);
+            height: calc(100vh - 220px);
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f1f5f9;
         }
+        
+        .message-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .message-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .message-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .message {
+            transition: background-color 0.2s ease;
+        }
+
+        .message:hover {
+            background-color: #f8fafc;
+        }
+
         .deleted-message {
-            border: 1px solid #ff0000;
-            background-color: #ffebee;
+            border: 1px solid #ff6b6b;
+            background-color: #fff5f5;
         }
+
+        .deleted-message:hover {
+            background-color: #ffe3e3;
+        }
+
         .message-input-container {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             background-color: white;
-            padding: 1rem;
+            padding: 1.25rem;
             border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <div id="topic" class="mb-4 p-4 bg-white rounded shadow"></div>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-6">
+        <div id="topic" class="mb-6 p-5 bg-white rounded-lg shadow-sm border border-gray-100"></div>
         
-        <div id="messages" class="message-container space-y-2"></div>
+        <div id="messages" class="message-container space-y-3 px-1"></div>
 
         <div class="message-input-container">
             <div class="max-w-4xl mx-auto">
-                <div class="flex gap-2">
-                    <input type="text" id="name" placeholder="名前" class="flex-none w-48 px-3 py-2 border rounded">
-                    <input type="text" id="message" placeholder="メッセージ" class="flex-grow px-3 py-2 border rounded">
-                    <button id="send" class="flex-none px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">送信</button>
+                <div class="flex gap-3">
+                    <input type="text" id="name" placeholder="名前" 
+                           class="flex-none w-48 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <input type="text" id="message" placeholder="メッセージ" 
+                           class="flex-grow px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <button id="send" 
+                            class="flex-none px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition duration-150">
+                        送信
+                    </button>
                 </div>
             </div>
         </div>
@@ -44,43 +79,54 @@
 
     <script>
         let messageStore = new Map();
-        let lastUpdate = 0;
 
         function createMessageElement(message) {
             const div = document.createElement('div');
             div.id = `message-${message.number}`;
-            div.className = 'p-4 bg-white rounded shadow';
+            div.className = 'message p-4 bg-white rounded-lg shadow-sm border border-gray-100';
             
             if (message.message === "削除されました" && message.name === "削除されました") {
                 div.classList.add('deleted-message');
             }
 
+            const header = document.createElement('div');
+            header.className = 'flex items-center gap-2 text-sm';
+
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'text-gray-500';
+            numberSpan.textContent = `${message.number}:`;
+
             const nameSpan = document.createElement('span');
             if (message.name_color) {
                 nameSpan.style.color = message.name_color;
             }
+            nameSpan.className = 'font-medium';
             nameSpan.textContent = message.name;
 
             const idSpan = document.createElement('span');
             if (message.id_color) {
                 idSpan.style.color = message.id_color;
             }
+            idSpan.className = 'text-sm';
             idSpan.textContent = message.user_id || '';
 
             const extraSpan = document.createElement('span');
             if (message.extra_text) {
                 extraSpan.style.color = 'magenta';
+                extraSpan.className = 'text-sm';
                 extraSpan.textContent = message.extra_text;
             }
 
+            header.appendChild(numberSpan);
+            header.appendChild(nameSpan);
+            header.appendChild(idSpan);
+            header.appendChild(extraSpan);
+
             const messageText = document.createElement('div');
-            messageText.className = 'mt-1';
+            messageText.className = 'mt-2 text-gray-700 whitespace-pre-wrap';
             messageText.textContent = message.message;
 
-            div.appendChild(document.createTextNode(`${message.number}: `));
-            div.appendChild(nameSpan);
-            div.appendChild(idSpan);
-            div.appendChild(extraSpan);
+            div.appendChild(header);
             div.appendChild(messageText);
 
             return div;
@@ -92,13 +138,13 @@
 
             const messagesContainer = document.getElementById('messages');
             
-            data.messages.forEach(message => {
+            data.messages.reverse().forEach(message => {
                 const existingMessage = messageStore.get(message.number);
                 
                 if (!existingMessage) {
                     // 新しいメッセージを追加
                     const messageElement = createMessageElement(message);
-                    messagesContainer.insertBefore(messageElement, messagesContainer.firstChild);
+                    messagesContainer.appendChild(messageElement);
                     messageStore.set(message.number, message);
                 } else if (
                     message.message === "削除されました" && 
@@ -132,7 +178,10 @@
         let isScrolledToBottom = true;
 
         messagesContainer.addEventListener('scroll', () => {
-            isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop === messagesContainer.clientHeight;
+            isScrolledToBottom = Math.abs(
+                (messagesContainer.scrollHeight - messagesContainer.scrollTop) - 
+                messagesContainer.clientHeight
+            ) < 1;
         });
 
         const observer = new MutationObserver(() => {
@@ -141,7 +190,7 @@
             }
         });
 
-        observer.observe(messagesContainer, { childList: true });
+        observer.observe(messagesContainer, { childList: true, subtree: true });
     </script>
 </body>
 </html>

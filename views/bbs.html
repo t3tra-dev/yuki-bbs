@@ -1,373 +1,147 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script></head>
-<body>
-  <span id="status">network status</span>
-  <button id="openModal">設定</button>
-  <select name="channel" id="channel">
-    <option value="main">雑談</option>
-    <option value="battle">バトスタ</option>
-  </select>
-  <label for="verify">スピ限</label>
-  <input type="checkbox" id="verify" name="verify">
-  <br>
-  <label for="message"></label>
-  <textarea id="message" rows="6" required></textarea>
-  <br>
-  <button onclick="sendMessageByUser()">送信</button>
-  <br>
-  <div id="modalOverlay">
-    <div id="modal">
-      <button id="closeModal">閉じる</button>
-      <h3>設定</h3>
-      <label for="name">名前</label>
-      <input type="text" id="name" value="" maxlength="25" required>　
-      <label for="seed">シード</label>
-      <input type="text" id="seed" value="" required>
-      <br>
-      <label for="darkmode">ダークモード:</label>
-      <input type="checkbox" id="darkmode" name="darkmode">
-      <br>
-      <label for="font">フォント:</label>
-      <select name="font" id="font-select">
-        <option value="">default</option>
-        <option value="Monospace">Monospace</option>
-        <option value="Arial">Arial</option>
-        <option value="Helvetica">Helvetica</option>
-        <option value="Times New Roman">Times New Roman</option>
-        <option value="Verdana">Verdana</option>
-      </select>
-      <br>
-      <label for="font-size">フォントサイズ:</label>
-      <input name="font-size" type="range" min=6 max=26 id="font-size">
-      <output id="font-size-val"></output>
-    </div>
-  </div>
-  <div id="result">loading...</div>
-<style>
-html {
-  scroll-behavior: smooth;
-}
-  
-body {
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  min-width: 100vw;
-  max-width: 100vw;
-}
-
-select {
-  border-radius: 0;
-  padding: 0;
-}
-  
-textarea {
-  margin: 10px;
-}
-
-a {
-  color: black;
-}
-  
-#status {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
-.online {
-  color: black;
-  background-color: greenyellow;
-  box-shadow: 0 0 7px limegreen;
-}
-
-.offline {
-  color: white;
-  background-color: red;
-  box-shadow: 0 0 7px orangered;
-}
-
-button {
-  padding: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  background-color: rgba(225, 225, 225, 0.1);
-  text-align: left;
-}
-
-#modalOverlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-#modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80vw;
-  padding: 20px;
-  background-color: white;
-  display: none;
-  border-radius: 5px;
-}
-
-#closeModal {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
-input {
-  height: 1em;
-  border-radius: 0;
-}
-</style>
-<script>
-// オートリンク
-function autoLink(str) {
-  var urlRegex = /(https?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+)/g;
-  return text.replace(urlRegex, function(url) {
-    return '<a href="' + url + '">' + url + '</a>';
-  });
-}
-
-// ライトモード化
-function toLightmode() {
-  $('body').css('background-color', 'white');
-  $('#modal').css('background-color', 'white');
-  $('textarea').css('background-color', 'white');
-  $('input').css('background-color', 'white');
-  $('body').css('color', 'black');
-  $('button').css('color', 'black');
-  $('textarea').css('color', 'black');
-  $('input').css('color', 'black');
-  $('a').css('color', 'black');
-  $('textarea').css('border', '1px solid black');
-  $('input').css('border', '1px solid black');
-}
-  
-// ダークモード化
-function toDarkmode() {
-  $('body').css('background-color', 'black');
-  $('#modal').css('background-color', 'black');
-  $('textarea').css('background-color', 'black');
-  $('input').css('background-color', 'black');
-  $('body').css('color', 'white');
-  $('button').css('color', 'white');
-  $('textarea').css('color', 'white');
-  $('input').css('color', 'white');
-  $('a').css('color', 'white');
-  $('textarea').css('border', '1px solid white');
-  $('input').css('border', '1px solid white');
-}
-  
-// メッセージ送信
-function sendMessage(name, seed, channel, message) {
-  if (name=='' || seed=='' || channel=='' || message=='') {
-    console.warn('Invalid argument(s).')
-  } else {
-    message = btoa(unescape(encodeURIComponent(message)));
-    $.ajax({
-      type: 'GET',
-      url: '/bbs/result',
-      data: {
-        'name': name,
-        'seed': seed,
-        'message': message,
-        'channel': channel
-      }
-    });
-    console.log(message, btoa(message))
-  }
-}
-
-// メッセージ送信
-function sendMessageByUser() {
-  var name = $('#name').val();
-  var seed = $('#seed').val();
-  var message = $('#message').val();
-  var channel = $('#channel').val();
-  sendMessage(name, seed, channel, message);
-  $('#message').val("");
-}
-
-// メッセージ読み込み
-var xhr;
-function loadMessage() {
-  if (xhr && xhr.readyState !== 4) { xhr.abort(); }
-  
-  var channel = $('#channel').val();
-  var filter = $('#verify').prop('checked');
-  
-  xhr = $.ajax({
-    type: 'GET',
-    url: '/bbs/api',
-    headers: { 'Accept': null },
-    xhrFields: {
-      withCredentials: true
-    },
-    data: {
-      'channel': channel,
-      'verify': filter,
-      't': 0
-    },
-    success: function(data) {
-      $('#result').html(data);
-      $('table tr').each(function() {
-        var firstTd = $(this).find('td:first');
-        var secondTd = $(this).find('td:eq(1)');
-        var number = firstTd.text();
-        var username = secondTd.html();
-        firstTd.html(`<button class="anchor" id="${number}">${number}</button>`);
-        secondTd.html(`<button class="userIDAnchor">${username}</button>`);
-      });
-      $("#result").find("*").contents().each(function() {
-        if (this.nodeType === 3) {
-          var text = $(this).text();
-          var replacedText = text.replace(/≫(\d+) /g, "<a href='#$1'>$&</a>");
-          var urlRegex = /(https?:\/\/[^\s]+)/g;
-　         if (urlRegex.test(text)) {
-            replacedText = replacedText.replace(urlRegex, function(url) {
-              return '<a href="' + url + '">' + url + '</a>';
-            });
-          }
-          $(this).replaceWith(replacedText);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>掲示板</title>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <style>
+        .message-container {
+            height: calc(100vh - 180px);
+            overflow-y: auto;
         }
-      });
-      $('.anchor').click(function() {
-        var currentMsg = $('#message').val();
-        $('#message').val(currentMsg + '≫' + $(this).text() + ' ');
-      });
-      $('.userIDAnchor').click(function() {
-        var currentMsg = $('#message').val();
-        var cmdRegex = /^\/(dis)?speaker|manager|moderator$/g;
-        if (currentMsg.match(cmdRegex)) { $('#message').val(currentMsg + ' ' + $(this).text()); } else { $('#message').val(currentMsg + $(this).text()); }
-      });
-      if (localStorage.getItem('darkmode') === 'true') { toDarkmode(); } else { toLightmode(); }
-    }
-  });
-}
+        .deleted-message {
+            border: 1px solid #ff0000;
+            background-color: #ffebee;
+        }
+        .message-input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div id="topic" class="mb-4 p-4 bg-white rounded shadow"></div>
+        
+        <div id="messages" class="message-container space-y-2"></div>
 
-// ネットワークコネクション検知
-function updateConnectionStatus() {
-  var status = $('#status');
-  if (navigator.onLine) {
-    status.removeClass('offline').addClass('online');
-    status.text('online');
-  } else {
-    status.removeClass('online').addClass('offline');
-    status.text('offline');
-  }
-}
+        <div class="message-input-container">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex gap-2">
+                    <input type="text" id="name" placeholder="名前" class="flex-none w-48 px-3 py-2 border rounded">
+                    <input type="text" id="message" placeholder="メッセージ" class="flex-grow px-3 py-2 border rounded">
+                    <button id="send" class="flex-none px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">送信</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-$(document).ready(function() {
-  updateConnectionStatus();
-  window.addEventListener('online', updateConnectionStatus);
-  window.addEventListener('offline', updateConnectionStatus);
+    <script>
+        let messageStore = new Map();
+        let lastUpdate = 0;
 
-  loadMessage();
-  
-  var selectedChannel = localStorage.getItem('channel');
-  if (selectedChannel) {
-    $('#channel').val(selectedChannel);
-  }
-  
-  $('#channel').change(function() {
-    var newSelectedChannel = $(this).val();
-    localStorage.setItem('channel', newSelectedChannel);
-    loadMessage();
-  });
+        function createMessageElement(message) {
+            const div = document.createElement('div');
+            div.id = `message-${message.number}`;
+            div.className = 'p-4 bg-white rounded shadow';
+            
+            if (message.message === "削除されました" && message.name === "削除されました") {
+                div.classList.add('deleted-message');
+            }
 
-  var isVerified = localStorage.getItem('verify') === 'true';
-  $('#verify').prop('checked', isVerified);
+            const nameSpan = document.createElement('span');
+            if (message.name_color) {
+                nameSpan.style.color = message.name_color;
+            }
+            nameSpan.textContent = message.name;
 
-  $('#verify').change(function() {
-    var isVerified = $(this).prop('checked');
-    localStorage.setItem('verify', isVerified.toString());
-    loadMessage();
-  });
+            const idSpan = document.createElement('span');
+            if (message.id_color) {
+                idSpan.style.color = message.id_color;
+            }
+            idSpan.textContent = message.user_id || '';
 
-  var storedName = localStorage.getItem('name');
-  var storedSeed = localStorage.getItem('seed');
+            const extraSpan = document.createElement('span');
+            if (message.extra_text) {
+                extraSpan.style.color = 'magenta';
+                extraSpan.textContent = message.extra_text;
+            }
 
-  if (storedName) {
-    $('#name').val(storedName);
-  }
-  if (storedSeed) {
-    $('#seed').val(storedSeed);
-  }
-  
-  $('#name').on('input', function() {
-    var newName = $(this).val();
-    localStorage.setItem('name', newName);
-  });
-  $('#seed').on('input', function() {
-    var newSeed = $(this).val();
-    localStorage.setItem('seed', newSeed);
-  });
+            const messageText = document.createElement('div');
+            messageText.className = 'mt-1';
+            messageText.textContent = message.message;
 
-    $('#openModal').click(function() {
-    $('#modalOverlay').fadeIn(300);
-    $('#modal').fadeIn(300);
-  });
+            div.appendChild(document.createTextNode(`${message.number}: `));
+            div.appendChild(nameSpan);
+            div.appendChild(idSpan);
+            div.appendChild(extraSpan);
+            div.appendChild(messageText);
 
-  $('#closeModal').click(function() {
-    $('#modalOverlay').fadeOut(300);
-    $('#modal').fadeOut(300);
-  });
-  
-  var selectedFont = localStorage.getItem('font');
-  if (selectedFont) {
-    $('#font-select').val(selectedFont);
-    $('body').css('font-family', selectedFont);
-  }
-  
-  $('#font-select').change(function() {
-    var newSelectedFont = $(this).val();
-    localStorage.setItem('font', newSelectedFont);
-    $('body').css('font-family', newSelectedFont);
-  });
-  
-  var selectedFontSize = localStorage.getItem('font-size');
-  if (selectedFontSize) {
-    $('#font-size').val(selectedFontSize);
-    $('body').css('font-size', `${selectedFontSize}px`);
-    $('#font-size-val').text(`${selectedFontSize}px`);
-  }
-  
-  $('#font-size').change(function() {
-    var newFontSize = $(this).val();
-    localStorage.setItem('font-size', newFontSize)
-    $('body').css('font-size', `${newFontSize}px`);
-    $('#font-size-val').text(`${newFontSize}px`);
-  });
+            return div;
+        }
 
-  var isDarkmode = localStorage.getItem('darkmode') === 'true';
-  $('#darkmode').prop('checked', isDarkmode);
+        function updateMessages(data) {
+            const topic = document.getElementById('topic');
+            topic.textContent = data.topic;
 
-  $('#darkmode').change(function() {
-    var isDarkmode = $(this).prop('checked');
-    localStorage.setItem('darkmode', isDarkmode.toString());
-    if (isDarkmode) { toDarkmode(); } else { toLightmode(); }
-  });
-  if (isDarkmode) { toDarkmode(); } else { toLightmode(); }
+            const messagesContainer = document.getElementById('messages');
+            
+            data.messages.forEach(message => {
+                const existingMessage = messageStore.get(message.number);
+                
+                if (!existingMessage) {
+                    // 新しいメッセージを追加
+                    const messageElement = createMessageElement(message);
+                    messagesContainer.insertBefore(messageElement, messagesContainer.firstChild);
+                    messageStore.set(message.number, message);
+                } else if (
+                    message.message === "削除されました" && 
+                    message.name === "削除されました" &&
+                    (existingMessage.message !== "削除されました" || existingMessage.name !== "削除されました")
+                ) {
+                    // メッセージが削除された場合
+                    const messageElement = document.getElementById(`message-${message.number}`);
+                    messageElement.classList.add('deleted-message');
+                    messageStore.set(message.number, message);
+                }
+            });
+        }
 
-  loadMessage();
-  setInterval(function() { loadMessage(); }, 5000);
-});
-</script>
+        async function fetchMessages() {
+            try {
+                const response = await fetch(`/bbs/api?t=${Date.now()}`);
+                const data = await response.json();
+                updateMessages(data);
+            } catch (error) {
+                console.error('メッセージの取得に失敗しました:', error);
+            }
+        }
+
+        // 初回読み込みと定期更新
+        fetchMessages();
+        setInterval(fetchMessages, 5000);
+
+        // スクロール位置の保持
+        const messagesContainer = document.getElementById('messages');
+        let isScrolledToBottom = true;
+
+        messagesContainer.addEventListener('scroll', () => {
+            isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop === messagesContainer.clientHeight;
+        });
+
+        const observer = new MutationObserver(() => {
+            if (isScrolledToBottom) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        });
+
+        observer.observe(messagesContainer, { childList: true });
+    </script>
 </body>
 </html>

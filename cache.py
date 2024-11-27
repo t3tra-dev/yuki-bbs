@@ -2,6 +2,7 @@ from functools import lru_cache, wraps
 from datetime import datetime, timedelta
 from threading import Lock
 
+
 def cache(seconds: int, max_size: int = 128, typed: bool = False):
     def wrapper(f):
         func = lru_cache(maxsize=max_size, typed=typed)(f)

@@ -352,10 +352,15 @@
 
         const messageText = document.createElement("div");
         messageText.className = "mt-2 text-break";
-        messageText.innerHTML = escapeHtml(message.message).replace(
-          /\n/g,
-          "<br>"
-        );
+        messageText.innerHTML = escapeHtml(message.message)
+          .replace(/\n/g, "<br>")
+          .replace(
+            /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g,
+            function (url) {
+              const fullUrl = url.startsWith("http") ? url : "https://" + url;
+              return `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+            }
+          );
 
         div.appendChild(header);
         div.appendChild(messageText);
@@ -430,7 +435,10 @@
 
       const observer = new MutationObserver(() => {
         if (isScrolledToBottom) {
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: "smooth",
+          });
         }
       });
 

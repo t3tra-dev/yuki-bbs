@@ -68,6 +68,36 @@
         z-index: 1040;
       }
 
+      .command-suggestions {
+        display: none;
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      }
+
+      .command-suggestion {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .command-suggestion:last-child {
+        border-bottom: none;
+      }
+
+      .command-suggestion:hover {
+        background-color: #f8f9fa;
+      }
+
       body.dark-mode {
         background-color: #36393f;
         color: #ffffff;
@@ -105,6 +135,20 @@
       body.dark-mode .modal-content {
         background-color: #36393f;
         border-color: #202225;
+      }
+
+      body.dark-mode .command-suggestions {
+        background: #40444b;
+        border-color: #202225;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+      }
+
+      body.dark-mode .command-suggestion {
+        border-bottom-color: #202225;
+      }
+
+      body.dark-mode .command-suggestion:hover {
+        background-color: #2f3136;
       }
     </style>
   </head>
@@ -186,7 +230,8 @@
           <div id="messages" class="message-container"></div>
 
           <div class="message-input-container">
-            <div class="input-group">
+            <div class="input-group position-relative">
+              <div id="commandSuggestions" class="command-suggestions"></div>
               <textarea
                 id="message"
                 class="form-control"
@@ -302,7 +347,10 @@
 
         const messageText = document.createElement("div");
         messageText.className = "mt-2 text-break";
-        messageText.innerHTML = escapeHtml(message.message).replace(/\n/g, '<br>');
+        messageText.innerHTML = escapeHtml(message.message).replace(
+          /\n/g,
+          "<br>"
+        );
 
         div.appendChild(header);
         div.appendChild(messageText);
@@ -312,7 +360,7 @@
 
       function updateMessages(data) {
         const topic = document.getElementById("topic");
-        topic.innerHTML = escapeHtml(data.topic).replace(/\n/g, '<br>');
+        topic.innerHTML = escapeHtml(data.topic).replace(/\n/g, "<br>");
 
         const messagesContainer = document.getElementById("messages");
 
@@ -399,6 +447,7 @@
 
       // Message sending
       const messageInput = document.getElementById("message");
+      const suggestionContainer = document.getElementById("commandSuggestions");
       const sendButton = document.getElementById("send");
       let isSending = false;
 
@@ -462,6 +511,149 @@
           e.preventDefault();
           sendMessage();
           messageInput.style.height = "auto";
+        }
+      });
+
+      // コマンド定義
+      const commands = [
+        {
+          name: "delete",
+          description: "メッセージを削除",
+          args: [{ type: "number", description: "メッセージ番号" }],
+        },
+        {
+          name: "add",
+          description: "追加のテキストを付与",
+          args: [
+            { type: "id", description: "ユーザーID" },
+            { type: "string", description: "追加のテキスト" },
+          ],
+        },
+        {
+          name: "speaker",
+          description: "スピーカー権限を付与",
+          args: [{ type: "id", description: "ユーザーID" }],
+        },
+        {
+          name: "disspeaker",
+          description: "スピーカー権限を削除",
+          args: [{ type: "id", description: "ユーザーID" }],
+        },
+        {
+          name: "manager",
+          description: "マネージャー権限を付与",
+          args: [{ type: "id", description: "ユーザーID" }],
+        },
+        {
+          name: "dismanager",
+          description: "マネージャー権限を削除",
+          args: [{ type: "id", description: "ユーザーID" }],
+        },
+        {
+          name: "moderator",
+          description: "モデレーター権限を付与",
+          args: [{ type: "id", description: "ユーザーID" }],
+        },
+        {
+          name: "dismoderator",
+          description: "モデレーター権限を削除",
+          args: [{ type: "id", description: "ユーザーID" }],
+        },
+        {
+          name: "color",
+          description: "ユーザーの色を変更",
+          args: [
+            { type: "string", description: "色コード" },
+            { type: "id", description: "ユーザーID" },
+          ],
+        },
+      ];
+
+      function getUserIds() {
+        const ids = new Set();
+        messageStore.forEach((message) => {
+          if (message.user_id) {
+            ids.add(message.user_id.replace("@", ""));
+          }
+        });
+        return Array.from(ids);
+      }
+
+      function showSuggestions(input) {
+        const parts = input.split(" ");
+        const commandPart = parts[0].toLowerCase();
+
+        if (!commandPart.startsWith("/")) {
+          suggestionContainer.style.display = "none";
+          return;
+        }
+
+        const matchingCommands = commands.filter((cmd) =>
+          cmd.name.startsWith(commandPart.slice(1))
+        );
+
+        if (parts.length > 1 && matchingCommands.length === 1) {
+          const command = matchingCommands[0];
+          const argIndex = parts.length - 2;
+
+          if (command.args[argIndex]?.type === "id") {
+            const userIds = getUserIds();
+            const suggestions = userIds.filter((id) =>
+              id.toLowerCase().startsWith(parts[parts.length - 1].toLowerCase())
+            );
+
+            displaySuggestions(
+              suggestions.map((id) => ({
+                display: id,
+                value: parts.slice(0, -1).join(" ") + " " + id,
+              }))
+            );
+          }
+        } else {
+          displaySuggestions(
+            matchingCommands.map((cmd) => ({
+              display: `/${cmd.name} - ${cmd.description}`,
+              value: "/" + cmd.name + " ",
+            }))
+          );
+        }
+      }
+
+      function displaySuggestions(items) {
+        if (items.length === 0) {
+          suggestionContainer.style.display = "none";
+          return;
+        }
+
+        suggestionContainer.innerHTML = items
+          .map(
+            (item) =>
+              `<div class="command-suggestion list-group-item-action" data-value="${item.value}">${item.display}</div>`
+          )
+          .join("");
+        suggestionContainer.style.display = "block";
+      }
+
+      messageInput.addEventListener("input", () => {
+        showSuggestions(messageInput.value);
+      });
+
+      suggestionContainer.addEventListener("click", (e) => {
+        const suggestion = e.target.closest(".command-suggestion");
+        if (suggestion) {
+          messageInput.value = suggestion.dataset.value;
+          messageInput.focus();
+          suggestionContainer.style.display = "none";
+        }
+      });
+
+      // クリックイベントでサジェストを非表示にする
+      document.addEventListener("click", (e) => {
+        if (
+          !e.target.closest(".command-suggestions") &&
+          !e.target.closest("#message")
+        ) {
+          suggestionContainer.style.display = "none";
         }
       });
     </script>

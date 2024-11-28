@@ -370,7 +370,15 @@
 
       function updateMessages(data) {
         const topic = document.getElementById("topic");
-        topic.innerHTML = escapeHtml(data.topic).replace(/\n/g, "<br>");
+        topic.innerHTML = escapeHtml(data.topic)
+          .replace(/\n/g, "<br>")
+          .replace(
+            /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g,
+            function (url) {
+              const fullUrl = url.startsWith("http") ? url : "https://" + url;
+              return `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+            }
+          );
 
         const messagesContainer = document.getElementById("messages");
 

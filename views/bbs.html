@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
     <title>掲示板</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -172,7 +173,15 @@
               aria-label="Close"
             ></button>
           </div>
+          <!-- 設定モーダルの内容を更新 -->
           <div class="modal-body">
+            <!-- 現在のアカウント選択 -->
+            <div class="mb-3">
+              <label for="accountSelect" class="form-label">アカウント</label>
+              <select class="form-control" id="accountSelect"></select>
+            </div>
+
+            <!-- アカウント情報入力フォーム -->
             <div class="mb-3">
               <label for="modalName" class="form-label">名前</label>
               <input type="text" class="form-control" id="modalName" />
@@ -180,6 +189,16 @@
             <div class="mb-3">
               <label for="modalSeed" class="form-label">シード</label>
               <input type="text" class="form-control" id="modalSeed" />
+            </div>
+
+            <!-- アカウント管理ボタン -->
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-success" id="addAccount">
+                アカウント追加
+              </button>
+              <button type="button" class="btn btn-danger" id="deleteAccount">
+                アカウント削除
+              </button>
             </div>
           </div>
           <div class="modal-footer">
@@ -247,7 +266,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // JavaScript code (unchanged)
       let messageStore = new Map();
       let currentChannel = "main";
 
@@ -277,19 +295,6 @@
       }
 
       settingsButton.addEventListener("click", openModal);
-
-      saveSettings.addEventListener("click", () => {
-        localStorage.setItem("userName", modalName.value);
-        localStorage.setItem("userSeed", modalSeed.value);
-        settingsModal.hide();
-      });
-
-      // Load settings on page load
-      window.addEventListener("load", () => {
-        if (!localStorage.getItem("userName")) {
-          openModal();
-        }
-      });
 
       function escapeHtml(str) {
         return str
@@ -458,8 +463,9 @@
         if (!message) return;
 
         isSending = true;
-        const name = localStorage.getItem("userName") || "名無し";
-        const seed = localStorage.getItem("userSeed") || "";
+        const account = getCurrentAccount();
+        const name = account.name || "名無し";
+        const seed = account.seed || "";
 
         try {
           const encodedMessage = btoa(unescape(encodeURIComponent(message)));
@@ -656,6 +662,94 @@
           suggestionContainer.style.display = "none";
         }
       });
+
+      // アカウント管理関連のJavaScript
+      const accountSelect = document.getElementById("accountSelect");
+      const addAccountBtn = document.getElementById("addAccount");
+      const deleteAccountBtn = document.getElementById("deleteAccount");
+
+      // アカウントデータの構造
+      // accounts = [{ name: "名前", seed: "シード" }, ...]
+      let accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
+      let currentAccountIndex = parseInt(
+        localStorage.getItem("currentAccountIndex") || "0"
+      );
+
+      // アカウントセレクトボックスを更新
+      function updateAccountSelect() {
+        accountSelect.innerHTML = accounts
+          .map(
+            (account, index) =>
+              `<option value="${index}">${account.name}</option>`
+          )
+          .join("");
+        accountSelect.value = currentAccountIndex;
+      }
+
+      // アカウント変更時の処理
+      accountSelect.addEventListener("change", (e) => {
+        currentAccountIndex = parseInt(e.target.value);
+        localStorage.setItem("currentAccountIndex", currentAccountIndex);
+        modalName.value = accounts[currentAccountIndex].name;
+        modalSeed.value = accounts[currentAccountIndex].seed;
+      });
+
+      // アカウント追加
+      addAccountBtn.addEventListener("click", () => {
+        const newAccount = { name: modalName.value, seed: modalSeed.value };
+        accounts.push(newAccount);
+        currentAccountIndex = accounts.length - 1;
+        localStorage.setItem("accounts", JSON.stringify(accounts));
+        localStorage.setItem("currentAccountIndex", currentAccountIndex);
+        updateAccountSelect();
+      });
+
+      // アカウント削除
+      deleteAccountBtn.addEventListener("click", () => {
+        if (accounts.length <= 1) {
+          alert("最後のアカウントは削除できません");
+          return;
+        }
+        accounts.splice(currentAccountIndex, 1);
+        currentAccountIndex = Math.max(0, currentAccountIndex - 1);
+        localStorage.setItem("accounts", JSON.stringify(accounts));
+        localStorage.setItem("currentAccountIndex", currentAccountIndex);
+        updateAccountSelect();
+        modalName.value = accounts[currentAccountIndex].name;
+        modalSeed.value = accounts[currentAccountIndex].seed;
+      });
+
+      // 設定保存時の処理を更新
+      saveSettings.addEventListener("click", () => {
+        accounts[currentAccountIndex] = {
+          name: modalName.value,
+          seed: modalSeed.value,
+        };
+        localStorage.setItem("accounts", JSON.stringify(accounts));
+        settingsModal.hide();
+      });
+
+      // 初期ロード時の処理を更新
+      window.addEventListener("load", () => {
+        if (accounts.length === 0) {
+          accounts.push({ name: "", seed: "" });
+          localStorage.setItem("accounts", JSON.stringify(accounts));
+        }
+        updateAccountSelect();
+        if (!accounts[currentAccountIndex].name) {
+          openModal();
+        }
+      });
+
+      // メッセージ送信時のユーザー情報取得を更新
+      function getCurrentAccount() {
+        return accounts[currentAccountIndex] || { name: "名無し", seed: "" };
+      }
+
+      // sendMessage関数内のユーザー情報取得部分を更新
+      const account = getCurrentAccount();
+      const name = account.name || "名無し";
+      const seed = account.seed || "";
     </script>
   </body>
 </html>

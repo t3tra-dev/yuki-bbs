@@ -24,7 +24,7 @@
         flex: 1 1 auto;
         overflow-y: auto;
       }
-      
+
       .message-input-container {
         flex: 0 0 auto;
         background-color: #f8f9fa;
@@ -246,6 +246,15 @@
         }
       });
 
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
       function createMessageElement(message) {
         const div = document.createElement("div");
         div.id = `message-${message.number}`;
@@ -293,7 +302,7 @@
 
         const messageText = document.createElement("div");
         messageText.className = "mt-2 text-break";
-        messageText.innerHTML = message.message;
+        messageText.innerHTML = escapeHtml(message.message).replace(/\n/g, '<br>');
 
         div.appendChild(header);
         div.appendChild(messageText);
@@ -303,7 +312,7 @@
 
       function updateMessages(data) {
         const topic = document.getElementById("topic");
-        topic.innerHTML = data.topic.replace("\n", "<br>");
+        topic.innerHTML = escapeHtml(data.topic).replace(/\n/g, '<br>');
 
         const messagesContainer = document.getElementById("messages");
 

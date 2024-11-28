@@ -85,7 +85,7 @@ def parse_html_to_json(html_content):
                 'user_id': user_id,
                 'id_color': id_color,
                 'extra_text': extra_text,
-                'message': cols[2].get_text()
+                'message': cols[2].get_text().replace('<br>', '\n').replace('<br/>', '\n')
             })
 
     return {

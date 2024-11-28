@@ -296,7 +296,7 @@
 
       function updateMessages(data) {
         const topic = document.getElementById("topic");
-        topic.textContent = data.topic;
+        topic.innerHTML = data.topic.replace('\n', '<br>');
 
         const messagesContainer = document.getElementById("messages");
 

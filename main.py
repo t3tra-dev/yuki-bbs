@@ -40,8 +40,9 @@ def parse_html_to_json(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
 
     # 話題を取得
-    topic = soup.find('h3').get_text() if soup.find('h3') else ""
-    topic = topic[5:]
+    if soup.find('h3'):
+        topic_html = str(soup.find('h3').decode_contents())
+        topic = topic_html.replace('<br>', '\n').replace('<br/>', '\n')[5:]
 
     messages = []
     for row in soup.find_all('tr')[1:]:  # ヘッダー行をスキップ
